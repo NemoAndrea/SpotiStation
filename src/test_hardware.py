@@ -1,24 +1,18 @@
 import board  # NOTE: this means we use GPIO.BCM mode
-from digitalio import DigitalInOut, Pull
 import time
 import RPi.GPIO
 from test_utils import print_progress
-from utils import slidervalue
 
 # slider imports
 from rainbowio import colorwheel
-from adafruit_seesaw.seesaw import Seesaw
-from adafruit_seesaw.analoginput import AnalogInput
-from adafruit_seesaw import neopixel
 
-# play pause button - wired to SPI0_MOSI
-playpause_button = DigitalInOut(board.MOSI)
-playpause_button.pull = Pull.UP
+from setup_hardware import initialise_buttons, intialise_slider
 
-# NeoSlider Setup
-neoslider = Seesaw(board.I2C(), 0x30)
-potentiometer = AnalogInput(neoslider, 18)
-pixels = neopixel.NeoPixel(neoslider, 14, 4)
+# Set up the buttons
+playpause = initialise_buttons()
+
+# Set up slider
+volumeslider = intialise_slider() 
 
 device_status = [
     {"id" :"Play/Pause Button", "help": "Hold for 1s and release", "progress":"-", "ok":False},
@@ -26,7 +20,7 @@ device_status = [
 
 
 def test_button(device_id, pressed_iterations):      
-    if playpause_button.value == False:  # button is pressed down
+    if playpause.value == False:  # button is pressed down
         device_status[device_id]["progress"] = "holding button..."
         pressed_iterations += 1
     else: 
@@ -50,7 +44,7 @@ def check_slider(device_id, value, range_progress):
     device_status[device_id]["progress"] = (f"Range: {range_progress[0]:.2f} to "
     f"{range_progress[1]:.2f} ({(range_progress[1]-range_progress[0])*100:.0f})%")
     # Fill the pixels a color based on the position of the potentiometer.
-    pixels.fill(colorwheel((1-value) / 2 * 255))
+    volumeslider.led.fill(colorwheel((1-value) / 2 * 255))
     return range_progress
 
 try:
@@ -58,7 +52,7 @@ try:
     print_progress(device_status)
 
     button_held = 0  # number of loop cycles the button has been (continously) pressed down
-    slider = slidervalue(potentiometer)
+    slider = volumeslider.position()
     if slider == None:
         # TODO this should probably be handled with a few tries 
         raise Exception("BAD i2c START - Exiting...")
@@ -76,7 +70,7 @@ try:
         NeoSlider check
         """
 
-        slider = slidervalue(potentiometer)
+        slider = volumeslider.position()
         if slider is not None:
             slider_progress = check_slider(1, slider, slider_progress)  
 
@@ -84,14 +78,16 @@ try:
         time.sleep(0.1)
 
     print(">>> All hardware checks passed!")
+    
+    volumeslider.led.fill(0)  # turn off slider neopixek
     RPi.GPIO.cleanup()
         
 except KeyboardInterrupt:
-    pixels.fill(0)
-    RPi.GPIO.cleanup()
+    volumeslider.led.fill(0)  # turn off slider neopixek  
+    RPi.GPIO.cleanup()    
     print("\nKeyboardInterrupt - cleaned up GPIO resources.")
 except Exception as e:
-    pixels.fill(0)
+    volumeslider.led.fill(0)  # turn off slider neopixek
     RPi.GPIO.cleanup()
     print(e) 
     print("\nCleaned up GPIO resources.")

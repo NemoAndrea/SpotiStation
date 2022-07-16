@@ -1,5 +1,7 @@
 # Other
 cache_directory/
+.cache
+.creds
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

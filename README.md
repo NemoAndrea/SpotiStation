@@ -35,7 +35,7 @@ For reasons that are not entirely clear to me, the NeoSlider does not work well 
 4. Save and exit `nano` (ctrl s, ctrl x)
 5. Reboot (maybe even power cycle)
 
-### Setup - Spotify
+### Setup - Spotify (background)
 
 To stream Spotify, we will use [spotifyd](https://github.com/Spotifyd). We need to install the latest release (for ARMv6), as per the instructions laid out on [their raspberry pi guide page](https://spotifyd.github.io/spotifyd/installation/Raspberry-Pi.html). For completeness I will cover the contents of their page here. If in doubt, follow the instructions on `spotifyd`'s page.  Make sure you get the latest release. At the time of writing, the latest version is `0.3.3`, so we install that with:
 
@@ -49,32 +49,6 @@ The command above will give you a `tar.gz` archive, which you can unpack with
 
 ```
 tar -xf <name of downloaded file>.tar.gz
-```
-
-Now we want to run this service as a daemon (background service). We must create a file in `systemd`.
-
-```
-sudo nano /etc/systemd/user/spotifyd.service
-```
-
-This will open the text editor `nano`. You  need to copy the contents of (https://github.com/Spotifyd/spotifyd/blob/master/contrib/spotifyd.service)[https://github.com/Spotifyd/spotifyd/blob/master/contrib/spotifyd.service] into it. As before, use the most up-to-date version that is found at that URL. For completeness, this is the version I used:
-
-```toml
-[Unit]
-Description=A spotify playing daemon
-Documentation=https://github.com/Spotifyd/spotifyd
-Wants=sound.target
-After=sound.target
-Wants=network-online.target
-After=network-online.target
-
-[Service]
-ExecStart=/usr/bin/spotifyd --no-daemon
-Restart=always
-RestartSec=12
-
-[Install]
-WantedBy=default.target
 ```
 
 Now we need to create a config file where we set up`spotifyd` to our liking.
@@ -114,9 +88,78 @@ Where of course the following items have to be changed to your own credentials/r
 
 > If you use Facebook login for Spotify, you will need to go to Spotify's website and look at your account settings. You should be able to find a numerical username. This is the username you will want to use for `spotifyd`. As for the password, you will probably have to request a 'device password' somewhere in the account settings in Spotify. This takes less than 3 minutes.
 
-If you have filled in your credentials, it would be good to check if its all working before making the daemon start up automatically. Give it a whirl by typing `~/spotifyd --no-daemon`. You should get some information about the information it is using and if it managed to make a connection. If you go to Spotify on your phone or pc, the device should now be listed in playback devices (as 'Music_Pi')!
+If you have filled in your credentials, it would be good to check if its all working before making the daemon start up automatically. Give it a whirl by typing `~/spotifyd --no-daemon`. **You should get some information about the information it is using and if it managed to make a connection. If you go to Spotify on your phone or pc, the device should now be listed in playback devices (as 'Music_Pi')!**
 
-If everything worked up to this point, it is time to set `spotifyd` to start when the raspberry pi is booted. That way we always have it running and ready to play!
+If everything worked up to this point, it is time to set `spotifyd` to start when the raspberry pi is booted. That way we always have it running and ready to play! Let's make a service file for `systemctl` to run.
+
+```bash
+mkdir -p ~/.config/systemd/user/
+nano ~/.config/systemd/user/spotifyd.service
+```
+
+This will open the text editor `nano`. You  need to copy the contents of [github.com/Spotifyd/spotifyd/blob/master/contrib/spotifyd.service](https://github.com/Spotifyd/spotifyd/blob/master/contrib/spotifyd.service) into it. As before, use the most up-to-date version that is found at that URL. For completeness, this is the version I used:
+
+```toml
+[Unit]
+Description=A spotify playing daemon
+Documentation=https://github.com/Spotifyd/spotifyd
+Wants=sound.target
+After=sound.target
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=<path to where you unzipped spotifyd - e.g. /home/<username>/spotifyd> --no-daemon
+Restart=always
+RestartSec=12
+
+[Install]
+WantedBy=default.target
+```
+
+And then we can run `systemctl --user daemon-reload`. And then give the background process a test run with `systemctl --user start spotifyd.service`. Check in Spotify if the raspberry pi showed up in playback devices after running that command.
+
+If it's working, all we need to do is ensure this runs on startup. This is simple with the two following commands:
+
+```bash
+sudo loginctl enable-linger <username>
+systemctl --user enable spotifyd.service
+```
+
+Let's do one final check if its all set up right: shut down your raspberry pi (`sudo shutdown -h now`) and the raspberry pi should disappear from Spotify devices after a short while. Now start up the raspberry pi and see if it shows up in Spotify devices automatically!
+
+### Setup - Spotify (api control)
+
+While `spotifyd` actually handles the audio streaming, it does not control playback. Playback control and playlist selection etc is done via the Spotify api. Luckily, there is a python package for this [called spotipy](https://pypi.org/project/spotipy/). Let's install it
+
+```
+pip3 install spotipy
+```
+
+We need to get credentials for the api, which we can realise by making an 'app' in the [spotify developer bashboard](https://developer.spotify.com/dashboard/applications). Go to the dashboard, add  a new app, and from that new app get the `client id` and the `client secret` and `redirect url`.
+
+> Redirect url is best set to something local; I suggest `https://localhost:8888/spotipycode`. It doesn't matter. You will need to set this in the spotify dashboard in your app under the app-specific settings.
+
+We will put these credentials in environment variables as one would not want to have this included in the repository.
+
+```
+export SPOTIPY_CLIENT_ID='your-spotify-client-id'
+export SPOTIPY_CLIENT_SECRET='your-spotify-client-secret'
+export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
+```
+
+then run `test_spotipy.py` it will generate a .cache file in the current directory.
+
+Now you can use 
+
+``` python
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth())
+```
+
+and use it as you would expect
 
 ## Setup - Bluetooth speaker
 
@@ -151,6 +194,12 @@ Now we are paired (**but not connected**) with the device - this is the one-time
 
 ```
 connect <MAC adress
+```
+
+Apparently you cannot use bluetooth and wifi at the same time on a RPi with the built-in system so a dongle is needed. Let's use  a dongle for bluetooth and disable the internal one in `/boot/config.txt,`.
+
+```
+dtoverlay=pi3-disable-bt-overlay
 ```
 
 
