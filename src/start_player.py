@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+from dis import dis
 from linecache import cache
 import os
 import time
@@ -12,28 +13,39 @@ import alsaaudio
 
 from read_cache_into_environment import get_spotipy_auth
 from setup_hardware import initialise_buttons, intialise_slider
-from display import MusicDisplay
+from bootmenu import query_boot_mode, display_ip_info, select_playlists_on_display
+from display import MusicDisplay, DisplayOverlayTimer
 from utils import print_song_info
-
 
 ''''Raspberry pi music player'''
 def start_player(force_local_playback=False):
     print("Starting music player...")
 
-    poll_freq = 2  # how many seconds between playback status checks (to see if song changed etc)    
+    poll_freq = 2  # how many seconds between playback status checks (to see if song changed etc)  
+
+    ### Hardware setup  
     
     # Set up the buttons
-    playpause, back_but_1, back_but_2, side_but_1, side_but_2 = initialise_buttons()
-
-    print(f"are we root yet? {os.getuid()}")      
+    playpause, back_but_1, back_but_2, side_but_1, side_but_2 = initialise_buttons()   
 
     # Set up slider & volume control
     volumeslider = intialise_slider()
 
     # Set up display - ROOT is dropped here, be careful about removing/reordering for security.
     display = MusicDisplay(64, 64)  # needs root privileges, but those are dropped after this function 
+    display.set_image_from_file("/home/musicpi/minimal-music-player/interface/splash_screen.png")  # TODO avoid abs path
+    #disp_timer = DisplayOverlayTimer()
 
-    print(f"are we root yet? {os.getuid()}")    
+    ### Boot Menu
+
+    bootmode = query_boot_mode(playpause, back_but_2, side_but_1)
+    if bootmode:  # if user waited out the timeout or skipped the boot menu then bootmode=None
+        if bootmode=="ip":
+            display_ip_info(playpause, display)
+        elif bootmode=="playlist":
+            select_playlists_on_display(back_but_2, display, side_but_1, side_but_2, playpause)
+
+    ### Software setup and checks
 
     # volume control
     audio = alsaaudio.Mixer()  # default settings should work
@@ -82,7 +94,7 @@ def start_player(force_local_playback=False):
     current_playback = sp.current_playback()
     # pprint(current_playback)  # debugging
     print_song_info(current_playback)
-    display.set_background_image(current_playback)   
+    display.set_coverart(current_playback)   
 
     last_poll_time = time.time()  # initialise
     while True:
@@ -90,22 +102,37 @@ def start_player(force_local_playback=False):
             if sp.current_playback()["is_playing"]:  # get current playback status (play/pause)
                 print("pausing playback")
                 sp.pause_playback()
+                display.set_display_mode("paused")
             else:
                 sp.start_playback()
                 print("starting/resuming playback")
+                display.set_display_mode("")
 
         elif side_but_1.got_pressed():
             print("> Skipping track")
             sp.next_track()  # go to next track
+            # show the next track overlay - it will be cleared when the next track is loaded
+            display.set_display_mode("next_track")  
             current_playback=sp.current_playback()    
-            display.set_background_image(current_playback)
+            display.set_coverart(current_playback)            
+
+        elif back_but_1.got_pressed():
+            display.set_image_overlay('bla')  # testing
+
+        # # check if overlay should be removed
+        
+        # if disp_timer.overlay_expired() and display.overlay != None:
+        #     display.set_display_mode("")  # reset the overlay
+
+        # adjust volume
 
         slider_volume = int(volumeslider.position()*100)
         if volume != slider_volume:
             print(f'setting volume to {slider_volume} (0-100)')
             audio.setvolume(slider_volume)
-            volume = slider_volume        
-        
+            volume = slider_volume 
+
+        # check for song changes
 
         if time.time() - last_poll_time > 1:  # check current playback status for changes
             latest_playback = sp.current_playback()             
@@ -114,7 +141,7 @@ def start_player(force_local_playback=False):
             if current_playback["item"]["id"] != latest_playback["item"]['id']:
                 current_playback = latest_playback  # update current playback for next loop
                 print_song_info(current_playback)
-                display.set_background_image(current_playback)              
+                display.set_coverart(current_playback)              
 
             last_poll_time = time.time()
 
@@ -126,5 +153,7 @@ if __name__ == '__main__':
     parser.add_argument('--forcelocal', '-fl', help='Switch current spotify playback device to \
         raspberry pi when launching.', action="store_true")
     args = parser.parse_args()
+
+    
 
     start_player(args.forcelocal)
