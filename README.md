@@ -5,7 +5,7 @@ Minimalist music player built around open hardware design intended to be extreme
 
 ### Setup
 
-We are assuming the code is run from a raspberry pi running `Raspberry Pi OS Lite` and that the raspberry pi has some way to connect to WiFi. Bluetooth connectivity is required if speakers are to be driven wirelessly (as opposed to via 3.5mm jack of the Pi).
+We are assuming the code is run from a raspberry pi running `Raspberry Pi OS Lite` and that the raspberry pi has some way to connect to Wi-Fi. Bluetooth connectivity is required if speakers are to be driven wirelessly (as opposed to via 3.5mm jack of the Pi).
 
 Raspbian OS Lite comes with A Python 3 installation, and a GPIO library, so that will be pre-installed. But we will still need to get `pip` installed. 
 
@@ -34,6 +34,12 @@ For reasons that are not entirely clear to me, the NeoSlider does not work well 
 3. Add `i2c_arm_baudrate=400000` to the **same** line (comma separated), so it now reads `dtparam=i2c_arm=on,i2c_arm_baudrate=400000`
 4. Save and exit `nano` (ctrl s, ctrl x)
 5. Reboot (maybe even power cycle)
+
+### TODO: setup RGB panel
+
+Solder jumper between 4 and 18, picture quality is not good enough without. Analog audio (3.5mm jack or HDMI) will be disabled, but Bluetooth audio is fine.
+
+Enable the CPU core reservation (pi 3 and 4) with `isolcpus=3`
 
 ### Setup - Spotify (background)
 
@@ -84,7 +90,7 @@ Where of course the following items have to be changed to your own credentials/r
 * bitrate (choose 320)
 
 * device name (I suggest `Music_Pi`. *do not use spaces in the name*)
-* (optional) device - uncomment this line (remove `#`) and set a device if you want to select a specific output for audio (e.g. HDMI/bluetooth)
+* (optional) device - uncomment this line (remove `#`) and set a device if you want to select a specific output for audio (e.g. HDMI/Bluetooth)
 
 > If you use Facebook login for Spotify, you will need to go to Spotify's website and look at your account settings. You should be able to find a numerical username. This is the username you will want to use for `spotifyd`. As for the password, you will probably have to request a 'device password' somewhere in the account settings in Spotify. This takes less than 3 minutes.
 
@@ -128,9 +134,9 @@ systemctl --user enable spotifyd.service
 
 Let's do one final check if its all set up right: shut down your raspberry pi (`sudo shutdown -h now`) and the raspberry pi should disappear from Spotify devices after a short while. Now start up the raspberry pi and see if it shows up in Spotify devices automatically!
 
-### Setup - Spotify (api control)
+### Setup - Spotify (API control)
 
-While `spotifyd` actually handles the audio streaming, it does not control playback. Playback control and playlist selection etc is done via the Spotify api. Luckily, there is a python package for this [called spotipy](https://pypi.org/project/spotipy/). Let's install it
+While `spotifyd` actually handles the audio streaming, it does not control playback. Playback control and playlist selection etc is done via the Spotify API. Luckily, there is a python package for this [called spotipy](https://pypi.org/project/spotipy/). Let's install it
 
 ```
 pip3 install spotipy
@@ -138,7 +144,7 @@ pip3 install spotipy
 
 We need to get credentials for the api, which we can realise by making an 'app' in the [spotify developer bashboard](https://developer.spotify.com/dashboard/applications). Go to the dashboard, add  a new app, and from that new app get the `client id` and the `client secret` and `redirect url`.
 
-> Redirect url is best set to something local; I suggest `https://localhost:8888/spotipycode`. It doesn't matter. You will need to set this in the spotify dashboard in your app under the app-specific settings.
+> Redirect url is best set to something local; I suggest `https://localhost:8888/spotipycode`. It doesn't matter. You will need to set this in the Spotify dashboard in your app under the app-specific settings.
 
 We will put these credentials in environment variables as one would not want to have this included in the repository.
 
@@ -163,6 +169,12 @@ and use it as you would expect
 
 ## Setup - Bluetooth speaker
 
+Apparently you cannot use Bluetooth and Wi-Fi at the same time on a RPi with the built-in system so a dongle is needed. Let's use  a dongle for Bluetooth and disable the internal one in `/boot/config.txt,`.
+
+```
+dtoverlay=pi3-disable-bt-overlay
+```
+
 Apparently, `raspbian OS lite` does not come with all the bits and pieces needed to connect to Bluetooth speakers. Luckily, [others have treaded before](https://www.okdo.com/project/set-up-a-bluetooth-speaker-with-a-raspberry-pi/).  For whatever reason, `pulseaudio` is  required for this.  Let's install it by
 
 ```
@@ -183,7 +195,7 @@ Now we start connecting to the speaker. First we must use the `bluetoothctl` com
 scan on
 ```
 
-wait for your speaker to show up (your speaker should be listed by name - give it a minute to scan for devices). Once you see your speaker name, we can stop the scanning  by `scan off`. Now we must make a note of the *Bluetooth MAC address* (e.g. 00:11:22:33:FF:EE). Then, with the bluetooth speaker in pairing mode, enter
+wait for your speaker to show up (your speaker should be listed by name - give it a minute to scan for devices). Once you see your speaker name, we can stop the scanning  by `scan off`. Now we must make a note of the *Bluetooth MAC address* (e.g. 00:11:22:33:FF:EE). Then, with the Bluetooth speaker in pairing mode, enter
 
 ```
 pair <MAC adress>
@@ -194,12 +206,6 @@ Now we are paired (**but not connected**) with the device - this is the one-time
 
 ```
 connect <MAC adress
-```
-
-Apparently you cannot use bluetooth and wifi at the same time on a RPi with the built-in system so a dongle is needed. Let's use  a dongle for bluetooth and disable the internal one in `/boot/config.txt,`.
-
-```
-dtoverlay=pi3-disable-bt-overlay
 ```
 
 

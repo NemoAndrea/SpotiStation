@@ -1,6 +1,6 @@
 # Other
 cache_directory/
-.cache
+.cache*
 .creds
 
 # Byte-compiled / optimized / DLL files

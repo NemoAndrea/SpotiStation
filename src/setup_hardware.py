@@ -6,7 +6,47 @@ def initialise_buttons():
     playpause_button = DigitalInOut(board.MOSI)
     playpause_button.pull = Pull.UP
 
-    return playpause_button
+    # back button 1 and 2
+    back_button_1 = DigitalInOut(board.MISO)
+    back_button_1.pull = Pull.UP
+    back_button_2 = DigitalInOut(board.SCLK)
+    back_button_2.pull = Pull.UP
+
+    # side button 1 and 2
+    side_button_1 = DigitalInOut(board.CE0)
+    side_button_1.pull = Pull.UP
+    side_button_2 = DigitalInOut(board.CE1)
+    side_button_2.pull = Pull.UP
+
+    return [
+        PlayerButton(playpause_button),
+        PlayerButton(back_button_1),
+        PlayerButton(back_button_2),
+        PlayerButton(side_button_1), 
+        PlayerButton(side_button_2)
+    ]
+
+class PlayerButton:
+    def __init__(self, button):
+        self.button = button
+        self.last_value = button.value
+    
+    '''
+    Determine if button just got pressed
+
+    This is a convenience function that only returns true when the button is pressed
+    but was not yet pressed (held down) before. If the button is not pressed it will always
+    return false. To access the raw button value just use obj.button.value instead of obj.got_pressed()
+    '''
+    def got_pressed(self):
+        # button is physically pressed AND it was not pressed before
+        if self.button.value == False and self.last_value != False:  
+            self.last_value = self.button.value
+            return True
+        else:
+            self.last_value = self.button.value
+            return False
+
 
 
 from adafruit_seesaw.seesaw import Seesaw

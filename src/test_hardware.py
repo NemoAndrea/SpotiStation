@@ -9,18 +9,22 @@ from rainbowio import colorwheel
 from setup_hardware import initialise_buttons, intialise_slider
 
 # Set up the buttons
-playpause = initialise_buttons()
+playpause, back_but_1, back_but_2, side_but_1, side_but_2 = initialise_buttons()
 
 # Set up slider
 volumeslider = intialise_slider() 
 
 device_status = [
     {"id" :"Play/Pause Button", "help": "Hold for 1s and release", "progress":"-", "ok":False},
+    {"id" :"Back Button 1", "help": "Hold for 1s and release", "progress":"-", "ok":False},
+    {"id" :"Back Button 2", "help": "Hold for 1s and release", "progress":"-", "ok":False},
+    {"id" :"Side Button 1", "help": "Hold for 1s and release", "progress":"-", "ok":False},
+    {"id" :"Side Button 2", "help": "Hold for 1s and release", "progress":"-", "ok":False},
     {"id" :"volume_slider", "help": "slide across entire range", "progress":"-", "ok":False}]
 
 
-def test_button(device_id, pressed_iterations):      
-    if playpause.value == False:  # button is pressed down
+def test_button(device_id, button, pressed_iterations):      
+    if button.value == False:  # button is pressed down
         device_status[device_id]["progress"] = "holding button..."
         pressed_iterations += 1
     else: 
@@ -51,7 +55,13 @@ try:
     print(">>> Starting hardware checks...")
     print_progress(device_status)
 
-    button_held = 0  # number of loop cycles the button has been (continously) pressed down
+    # number of loop cycles the button has been (continously) pressed down
+    buttons_held_pp = 0 
+    buttons_held_t1 = 0 
+    buttons_held_t2 = 0 
+    buttons_held_s1 = 0 
+    buttons_held_s2 = 0 
+
     slider = volumeslider.position()
     if slider == None:
         # TODO this should probably be handled with a few tries 
@@ -60,19 +70,20 @@ try:
         slider_progress = [slider,slider]  # range covered by slider so far
 
     while any(not device["ok"] for device in device_status):    
-        """
-        Play/Pause button check
-        """    
+        
+        ### Button checks           
 
-        button_held = test_button(0, button_held)    
+        buttons_held_pp = test_button(0, playpause.button, buttons_held_pp)
+        buttons_held_t1 = test_button(1, back_but_1.button, buttons_held_t1)   
+        buttons_held_t2 = test_button(2, back_but_2.button, buttons_held_t2)   
+        buttons_held_s1 = test_button(3, side_but_1.button, buttons_held_s1)   
+        buttons_held_s2 = test_button(4, side_but_2.button, buttons_held_s2)       
 
-        """
-        NeoSlider check
-        """
+        ### NeoSlider check
 
         slider = volumeslider.position()
         if slider is not None:
-            slider_progress = check_slider(1, slider, slider_progress)  
+            slider_progress = check_slider(5, slider, slider_progress)  
 
         print_progress(device_status, clear=True)
         time.sleep(0.1)
