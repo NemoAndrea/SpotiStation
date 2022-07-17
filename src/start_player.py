@@ -8,6 +8,8 @@ from pprint import pprint  # TODO remove import
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+import alsaaudio
+
 from read_cache_into_environment import get_spotipy_auth
 from setup_hardware import initialise_buttons, intialise_slider
 from display import MusicDisplay
@@ -17,21 +19,29 @@ from utils import print_song_info
 ''''Raspberry pi music player'''
 def start_player(force_local_playback=False):
     print("Starting music player...")
-    
-    poll_freq = 2  # how many seconds between playback status checks (to see if song changed etc)
 
+    poll_freq = 2  # how many seconds between playback status checks (to see if song changed etc)    
+    
     # Set up the buttons
     playpause, back_but_1, back_but_2, side_but_1, side_but_2 = initialise_buttons()
 
-    # Set up slider
+    print(f"are we root yet? {os.getuid()}")      
+
+    # Set up slider & volume control
     volumeslider = intialise_slider()
 
-    # Set up display
-    display = MusicDisplay(64, 64)
+    # Set up display - ROOT is dropped here, be careful about removing/reordering for security.
+    display = MusicDisplay(64, 64)  # needs root privileges, but those are dropped after this function 
+
+    print(f"are we root yet? {os.getuid()}")    
+
+    # volume control
+    audio = alsaaudio.Mixer()  # default settings should work
+    volume = audio.getvolume()[0]  # intialise volume [0-100]
 
     # check if the spotifyd service is running
-    # assert os.system('systemctl --user is-active --quiet spotifyd.service')==0,  "Spotifyd daemon \
-    #     is not running"
+    assert os.system('systemctl --user is-active --quiet spotifyd.service')==0,  "Spotifyd daemon \
+        is not running"
 
     # quick and dirty get the id, secret and redirect URL into environment variable
     # this assumes the cache_spotipy_credentials.py has been run and .cache was generated before
@@ -90,6 +100,11 @@ def start_player(force_local_playback=False):
             current_playback=sp.current_playback()    
             display.set_background_image(current_playback)
 
+        slider_volume = int(volumeslider.position()*100)
+        if volume != slider_volume:
+            print(f'setting volume to {slider_volume} (0-100)')
+            audio.setvolume(slider_volume)
+            volume = slider_volume        
         
 
         if time.time() - last_poll_time > 1:  # check current playback status for changes

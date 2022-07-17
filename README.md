@@ -35,6 +35,12 @@ For reasons that are not entirely clear to me, the NeoSlider does not work well 
 4. Save and exit `nano` (ctrl s, ctrl x)
 5. Reboot (maybe even power cycle)
 
+We will also need to be able to control the system volume, for which we will need another python package
+
+```
+pip3 install pyalsaaudio
+```
+
 ### TODO: setup RGB panel
 
 Solder jumper between 4 and 18, picture quality is not good enough without. Analog audio (3.5mm jack or HDMI) will be disabled, but Bluetooth audio is fine.
