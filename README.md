@@ -1,4 +1,4 @@
-<img src="media/splash_screen_2K.png" width="400">
+<img src="media/player_render.JPG" width="800">
 
 # minimal-music-player
 Minimalist music player built around open hardware design intended to be extremely simple in operation. Intended to be usable by people with disabilities.
