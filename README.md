@@ -214,9 +214,9 @@ Now we are paired (**but not connected**) with the device - this is the one-time
 connect <MAC adress
 ```
 
+### Acknowledgements
 
-
-
+The programmatically generated text in the UI uses the [silkscreen font by Jason Kottke](https://kottke.org/plus/type/silkscreen/). It is converted to a PIL font for display purposes.
 
 
 

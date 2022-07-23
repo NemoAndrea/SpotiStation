@@ -1,6 +1,6 @@
 import sys
 import requests  # downloading image
-from PIL import Image
+from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 import time
 
@@ -19,7 +19,10 @@ class MusicDisplay:
         self.width = width
         self.height= height
         self.coverart = Image.new('RGB', (width, height)) 
-        self.overlay= Image.new('RGB', (width, height))   
+        self.overlay= Image.new('RGBA', (width, height)) 
+        # we use the silkscreen font by Jason Kottke, which is meant to be used at 
+        # 8pt (or multiples of that)
+        self.font = ImageFont.truetype('/home/musicpi/minimal-music-player/media/slkscr.ttf',8)  
 
         options = RGBMatrixOptions()
         options.rows = int(height)
@@ -59,20 +62,33 @@ class MusicDisplay:
             self.overlay = None  # reset overlay
 
     # TODO load these into memory
-    def set_image_overlay(self, overlay_file):
+    def set_image_overlay(self, overlay_file, dimming=0.9):
         print(f"setting overlay: {overlay_file}")
 
         self.overlay = Image.open(overlay_file)  # load the overlay
         composite = self.coverart.copy()  # make a copy of the coverart
-        composite = Image.eval(composite, (lambda pix: pix*0.1))  # lower intensity
+        composite = Image.eval(composite, (lambda pix: pix*(1-dimming)))  # lower intensity
         composite.paste(self.overlay, (0,0), self.overlay)  # add overlay on top of coverart
         self.display.SetImage(composite)
 
 
     # simple display image from file function for e.g. splash screen	
     def set_image_from_file(self, path):
-        img = Image.open(path) 
-        self.display.SetImage(img.convert('RGB'))
+        self.coverart = Image.open(path) 
+        self.display.SetImage(self.coverart.convert('RGB'))
+
+    
+    def add_text_overlay(self, text, location, dimming=0.9, fill=(255,255,255,255), clear=False):        
+        draw = ImageDraw.Draw(self.overlay)
+        if clear: 
+            draw.rectangle((0,0,self.width, self.height), fill=(0,0,0,0))
+        draw.text(location, text, anchor="mm", font=self.font, fill=fill)
+        composite = self.coverart.copy()  # make a copy of the coverart
+        composite = Image.eval(composite, (lambda pix: pix*(1-dimming)))  # lower intensity
+        composite.paste(self.overlay, (0,0), self.overlay)  # add overlay on top of coverart
+        self.display.SetImage(composite)
+
+    
 
     def fade_background(self, factor=0.1):
         '''Nondestructively drop the intensity of the image

@@ -38,7 +38,7 @@ def start_player(force_local_playback=False):
 
     ### Boot Menu
 
-    bootmode = query_boot_mode(playpause, back_but_2, side_but_1)
+    bootmode = query_boot_mode(playpause, back_but_2, side_but_1, display)
     if bootmode:  # if user waited out the timeout or skipped the boot menu then bootmode=None
         if bootmode=="ip":
             display_ip_info(playpause, display)
