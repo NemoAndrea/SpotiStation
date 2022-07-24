@@ -14,6 +14,7 @@ import alsaaudio
 from read_cache_into_environment import get_spotipy_auth
 from setup_hardware import initialise_buttons, intialise_slider
 from bootmenu import query_boot_mode, display_ip_info, select_playlists_on_display
+from config_manager import configure_playlists
 from display import MusicDisplay, DisplayOverlayTimer
 from utils import print_song_info
 
@@ -88,13 +89,18 @@ def start_player(force_local_playback=False):
         # and switch to it
         sp.transfer_playback(current_device["id"])     
 
-
     print("Currently playing:")
     
     current_playback = sp.current_playback()
-    # pprint(current_playback)  # debugging
     print_song_info(current_playback)
     display.set_coverart(current_playback)   
+
+    # get the playlists that are in rotation, and check if there are any new playlist in account
+    # TODO: exceed the limit of 50 playlists (multiple api calls)
+
+    all_playlists = sp.current_user_playlists()
+    playlists = configure_playlists(all_playlists['items'])
+    # TODO: automatically select playlist and add flag to accept current playlist even if not in rotation?
 
     last_poll_time = time.time()  # initialise
     while True:

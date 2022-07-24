@@ -1,0 +1,56 @@
+import configparser
+import re
+
+def configure_playlists(playlists):
+    '''Returns the user playlists that are 'in rotation' per the playlist.ini configuration file
+    
+    Takes the current user playlists as fetched from the spotify API to update the lists of
+    playlists - as the user may have added new playlists to their account'''
+    config = configparser.ConfigParser(allow_no_value=True)
+    config.read("config/playlists.ini")
+
+    # something to print to console
+    status = {'active':0, 'ignored':0, 'newly_added': 0}
+
+    ### check for new playlists
+
+    # first we draw up a list of playlist that are already in our config file
+    config_playlists = []
+    for key in config["in rotation"]:
+        config_playlists.append(key)
+        status['active'] += 1
+    for key in config["ignored"]:
+        config_playlists.append(key)
+        status['ignored'] += 1
+
+    for playlistentry in playlists:
+        # get the name of playlist, but remove any funny characters and trailing and leading whitespace
+        # we assume that whatever is left is unique enough to identify the playlist later from
+        # future API calls
+        name = re.sub('[^a-zA-Z0-9 \n\.]', '', playlistentry["name"]).strip().lower()
+        if name != '':  # sometimes there is some unnamed playlist. TODO: figure out if this is important to include
+            if not any(name == playlistname for playlistname in config_playlists):
+                config["ignored"][name] = playlistentry["uri"]
+                status['newly_added'] += 1
+
+    # add some comments to make it clearer what the structure of the config is
+    config.set('in rotation', '# playlists in this section will be played and switched between in the player')
+    config.set('ignored', '# new playlists will automatically be added here when player boots')
+    with open('config/playlists.ini', 'w') as fp:
+        config.write(fp)
+
+    print(f"Playlist Configuration: There are {status['active']} active playlists with "
+          f"{status['ignored']} playlists being ignored. There were {status['newly_added']} new "
+          f"playlist found and added to the 'ignored' section")
+
+    # Return only the 'in rotation' playlists (dict with playlist name as key, and uri as value)
+    # we must remove None values as those are comments
+    return  {k: v for k, v in dict(config["in rotation"]).items() if v is not None}
+
+def get_playlists_status():
+    '''Simple function that reads the current playlist config to nested dict'''
+    
+    config = configparser.ConfigParser()  # this will ignore comments
+    config.read("config/playlists.ini")
+
+    return {s:dict(config.items(s)) for s in config.sections()}
