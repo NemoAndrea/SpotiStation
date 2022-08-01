@@ -78,13 +78,16 @@ class MusicDisplay:
         self.display.SetImage(self.coverart.convert('RGB'))
 
     
-    def add_text_overlay(self, text, location, dimming=0.9, fill=(255,255,255,255), clear=False):        
+    def add_text_overlay(self, text, location, dimming=0.9, fill=(255,255,255,255), clear=False, center=True):        
         draw = ImageDraw.Draw(self.overlay)
         if clear: 
             draw.rectangle((0,0,self.width, self.height), fill=(0,0,0,0))
 
         # determine initial location of first letter (center alignment)
-        offset = -math.floor(sum([self.font.getsize(letter)[0]-1 for letter in text])/2) 
+        if center:
+            offset = -math.floor(sum([self.font.getsize(letter)[0]-1 for letter in text])/2) 
+        else:
+            offset = 0
         for i, letter in enumerate(text):
             basewidth, _ = self.font.getsize(letter)
             letter_loc = (location[0]+offset, location[1])

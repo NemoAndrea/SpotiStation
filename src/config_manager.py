@@ -1,8 +1,8 @@
 import configparser
 import re
 
-def configure_playlists(playlists):
-    '''Returns the user playlists that are 'in rotation' per the playlist.ini configuration file
+def update_playlists(playlists):
+    '''Updates and returns the user playlists that are 'in rotation' per the playlist.ini configuration file
     
     Takes the current user playlists as fetched from the spotify API to update the lists of
     playlists - as the user may have added new playlists to their account'''
@@ -33,11 +33,7 @@ def configure_playlists(playlists):
                 config["ignored"][name] = playlistentry["uri"]
                 status['newly_added'] += 1
 
-    # add some comments to make it clearer what the structure of the config is
-    config.set('in rotation', '# playlists in this section will be played and switched between in the player')
-    config.set('ignored', '# new playlists will automatically be added here when player boots')
-    with open('config/playlists.ini', 'w') as fp:
-        config.write(fp)
+    write_playlist_config(config)
 
     print(f"Playlist Configuration: There are {status['active']} active playlists with "
           f"{status['ignored']} playlists being ignored. There were {status['newly_added']} new "
@@ -47,10 +43,29 @@ def configure_playlists(playlists):
     # we must remove None values as those are comments
     return  {k: v for k, v in dict(config["in rotation"]).items() if v is not None}
 
-def get_playlists_status():
+def get_playlists_in_config():
     '''Simple function that reads the current playlist config to nested dict'''
     
     config = configparser.ConfigParser()  # this will ignore comments
     config.read("config/playlists.ini")
 
     return {s:dict(config.items(s)) for s in config.sections()}
+
+def get_playlists_in_config_as_sorted_list():
+    playlists =  get_playlists_in_config()
+    playlists_unsorted = []
+    for playlist_name in playlists["in rotation"].keys():
+        playlists_unsorted.append([playlist_name, True])
+    for playlist_name in playlists["ignored"].keys():
+        playlists_unsorted.append([playlist_name, False])
+
+    return sorted(playlists_unsorted, key=lambda item: item[0])
+
+
+def write_playlist_config(config):
+    # add some comments to make it clearer what the structure of the config is
+    config.set('in rotation', '# playlists in this section will be played and switched between in the player')
+    config.set('ignored', '# playlists in this section will be ignored by the music player')
+    config.set('ignored', '# new playlists in spotify will automatically be added here when player boots')
+    with open('config/playlists.ini', 'w') as fp:
+        config.write(fp)

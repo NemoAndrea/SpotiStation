@@ -14,7 +14,7 @@ import alsaaudio
 from read_cache_into_environment import get_spotipy_auth
 from setup_hardware import MusicPlayer
 from bootmenu import query_boot_mode
-from config_manager import configure_playlists
+from config_manager import update_playlists
 from utils import print_song_info
 
 ''''Raspberry pi music player'''
@@ -86,7 +86,7 @@ def start_player(force_local_playback=False):
     # TODO: exceed the limit of 50 playlists (multiple api calls)
 
     all_playlists = sp.current_user_playlists()
-    playlists = configure_playlists(all_playlists['items'])
+    playlists = update_playlists(all_playlists['items'])
     # TODO: automatically select playlist and add flag to accept current playlist even if not in rotation?
 
     last_poll_time = time.time()  # initialise

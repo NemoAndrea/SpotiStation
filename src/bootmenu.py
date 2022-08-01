@@ -1,6 +1,9 @@
 import socket
 import time
 import math
+from config_manager import get_playlists_in_config_as_sorted_list, write_playlist_config
+import configparser
+
 
 ''''Boot mode selection
 
@@ -12,32 +15,77 @@ device, but for quick on the go or for less tech savy users these menus can be u
 
 def query_boot_mode(player, duration=5):
     '''Main loop that allows for boot mode selection'''
-    print(f">> Launching boot menu - limit={duration} sec")
+    print(f">> Waiting for boot mode selection - limit={duration} sec")
     initial_time = time.time()  
     seconds_since_start = -1
     
     # wait for button press until 'duration' has passed. If loop expires, then None is returned
     while time.time()-initial_time < duration:
-        if player.playpause.got_pressed():
+        if any([player.playpause.got_pressed(), player.sidebutton_1.got_pressed(),player.sidebutton_2.got_pressed()]):
             print("> Skipped boot menu, launching application as normal")
-            return None
-        elif player.backbutton_2.got_pressed():
-            print("> Boot menu: selected IP menu")
-            return "ip"
-        elif player.backbutton_1.got_pressed():
-            print("> Boot menu: selected playlist selection")
-            return "playlist"
+            break
+        elif any((player.backbutton_1.got_pressed(), player.backbutton_2.got_pressed())):
+            print("> Launching Configuration Menu")
+            display_config_menu(player); break 
         # update the text on display once per second
         if seconds_since_start != math.floor(time.time()-initial_time):
             seconds_since_start = math.floor(time.time()-initial_time)
-            player.display.add_text_overlay(f"booting in {duration-seconds_since_start}", (32, 60),
-             dimming=0, fill=(255,255,255,200), clear=True)  
+            player.display.add_text_overlay("Press button", (32, 52),
+             dimming=0.5, fill=(255,255,255,200), clear=True)  
+            player.display.add_text_overlay(f"for config {duration-seconds_since_start}", (32, 60),
+             dimming=0.5, fill=(255,255,255,200), clear=False)  
         time.sleep(0.01)
 
-    print("> Boot menu expired, launching application as normal")
+    print("> Leaving Boot Menu, launching application as normal")
     player.display.add_text_overlay(f"starting...", (32, 60),
              dimming=0.7, fill=(255,255,255,200), clear=True)  
+    time.sleep(0.5)
     return None  # if we wait the full duration
+
+
+def display_config_menu(player, duration=30):
+    '''Configuration/boot menu that allows setting a few player options without ssh
+    
+    The menu will automatically exit if no action is chosen within 30 seconds. This is in case
+    someone accidentally opened the menu and is not sure what to do.'''
+    initial_time = time.time()  
+    current_item_index = 0  # current item in list that is selected
+    options = ["-- exit --", "playlists", "ip adress"]
+    
+    # wait for button press until 'duration' has passed. If loop expires, then None is returned
+    while time.time()-initial_time < duration:
+        player.display.add_text_overlay("Config Menu", (32, 5),
+             dimming=0.9, fill=(0,139,139,255), clear=True)        
+
+        # display the options on screen
+        for i, option in enumerate(options):
+            if current_item_index == i:
+                color = (0,255,0,230)  # make text green
+                textfill = "> "  # add '> {optiontext}' to further clarify that this option is selected
+            else:
+                color = (255,255,255,180)
+                textfill = ""  # no leading text
+            player.display.add_text_overlay(f"{textfill}{option}", (10, 14+i*6),
+            dimming=0.9, fill=color, clear=False, center=False) 
+
+        # the playpause button serves as the 'select' key, so when that is pressed we choose that option 
+        if player.playpause.got_pressed(): 
+            if current_item_index == 0: return  # exit menu, just return without doing anything
+            elif current_item_index == 1: select_playlists_on_display(player); return
+            elif current_item_index == 2: display_ip_info(player); return
+            # add more options here
+        
+        if player.sidebutton_2.got_pressed():
+            if current_item_index > 0:  # check we cannot exceed the list of options
+                current_item_index -= 1
+        elif player.sidebutton_1.got_pressed():
+            if current_item_index < (len(options)-1):  # check we cannot exceed the list of options
+                current_item_index += 1       
+
+
+        time.sleep(0.02)
+    return
+
 
 def display_ip_info(player):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -57,4 +105,81 @@ def display_ip_info(player):
 
 
 def select_playlists_on_display(player):
-    return 
+    display_limit = 8  # how many items for on one screen
+    playlists = get_playlists_in_config_as_sorted_list()
+    playlists.insert(0, ["-- save --", False])
+    print(playlists)
+    caroussel_offset = 0  # keep track of which playlists fit on the screen
+    cursor_position = 0
+    while True:
+        player.display.add_text_overlay("playlist state", (32, 5),
+             dimming=0.9, fill=(0,139,139,255), clear=True)
+        
+        for i, (playlist, in_rotation) in enumerate(playlists):
+            if caroussel_offset <= i < caroussel_offset+display_limit:  
+                # do nothing if i=0 and caroussel>0, as then i=0 location is occupied by 'more'                  
+                if not (caroussel_offset > 0 and i-caroussel_offset==0):                    
+                    color = (0, 255, 0, 255) if in_rotation else (255,255, 255, 80)
+                    if i==cursor_position:
+                        filltext = "> "
+                        text_x = 0
+                    else:
+                        filltext = ""
+                        text_x = 5
+                    player.display.add_text_overlay(f"{filltext}{playlist}", (text_x, 12 + (i-caroussel_offset)*6),
+                        dimming=0.9, fill=color, clear=False, center=False)
+
+        # display '...MORE' if more content can be revelead by scroll (moving cursor)
+        if display_limit+caroussel_offset-1 < len(playlist):
+            player.display.add_text_overlay(f"...more", (5, 60),
+                    dimming=0.9, fill=(248,221,116,255), clear=False, center=False)
+        if caroussel_offset > 0:
+            player.display.add_text_overlay(f"...more", (5, 12),
+                    dimming=0.9, fill=(248,221,116,255), clear=False, center=False)
+
+
+        if player.sidebutton_2.got_pressed():
+            if cursor_position > 0:  # check we cannot exceed the list of options
+                cursor_position -= 1
+            if cursor_position-1 < caroussel_offset:
+                if caroussel_offset != 0: caroussel_offset -=1
+        elif player.sidebutton_1.got_pressed():
+            if cursor_position < (len(playlists)-1):  # check we cannot exceed the list of options
+                cursor_position += 1  
+            if cursor_position+1 > caroussel_offset+display_limit:
+                caroussel_offset +=1
+
+                
+        if player.playpause.got_pressed():
+            if cursor_position == 0:  # save and exit option
+                # get the old config
+                config = configparser.ConfigParser(allow_no_value=True)
+                config.read("config/playlists.ini")
+                # get the new user selection
+                in_rotation = list(filter(lambda x: x[1], playlists[1:]))
+                ignored = list(filter(lambda x: not x[1], playlists[1:]))
+
+                for new_playlist, _ in in_rotation:
+                    if new_playlist not in [key for key in config["in rotation"]]:
+                        # swap to in_rotation
+                        print(f"[config change] (new in-rotation): {new_playlist}")
+                        # we get the uri from the old section (which is the 'ignored' section)
+                        uri = config.get("ignored", new_playlist)
+                        config.remove_option("ignored", new_playlist)
+                        config.set("in rotation", new_playlist, uri)
+                for new_playlist, _ in ignored:
+                    if new_playlist not in [key for key in config["ignored"]]:
+                        # swap to ignored
+                        print(f"[config change] (new ignored): {new_playlist}")
+                        # we get the uri from the old section (which is the 'in rotation' section)
+                        uri = config.get("in rotation", new_playlist)
+                        config.remove_option("in rotation", new_playlist)
+                        config.set("ignored", new_playlist, uri)
+                
+                write_playlist_config(config)
+                return
+            else:  
+                # we are toggling the state of the playlist 'ignored'<->'in rotation'
+                playlists[cursor_position][1] = not playlists[cursor_position][1]
+        
+        time.sleep(0.02)
