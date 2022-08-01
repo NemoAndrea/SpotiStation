@@ -12,39 +12,22 @@ from spotipy.oauth2 import SpotifyOAuth
 import alsaaudio
 
 from read_cache_into_environment import get_spotipy_auth
-from setup_hardware import initialise_buttons, intialise_slider
-from bootmenu import query_boot_mode, display_ip_info, select_playlists_on_display
+from setup_hardware import MusicPlayer
+from bootmenu import query_boot_mode
 from config_manager import configure_playlists
-from display import MusicDisplay, DisplayOverlayTimer
 from utils import print_song_info
 
 ''''Raspberry pi music player'''
 def start_player(force_local_playback=False):
     print("Starting music player...")
 
+    # TODO move to config
     poll_freq = 2  # how many seconds between playback status checks (to see if song changed etc)  
 
-    ### Hardware setup  
-    
-    # Set up the buttons
-    playpause, back_but_1, back_but_2, side_but_1, side_but_2 = initialise_buttons()   
+    ### Hardware setup - create a new MusicPlayer object  
 
-    # Set up slider & volume control
-    volumeslider = intialise_slider()
-
-    # Set up display - ROOT is dropped here, be careful about removing/reordering for security.
-    display = MusicDisplay(64, 64)  # needs root privileges, but those are dropped after this function 
-    display.set_image_from_file("/home/musicpi/minimal-music-player/interface/splash_screen.png")  # TODO avoid abs path
-    #disp_timer = DisplayOverlayTimer()
-
-    ### Boot Menu
-
-    bootmode = query_boot_mode(playpause, back_but_2, side_but_1, display)
-    if bootmode:  # if user waited out the timeout or skipped the boot menu then bootmode=None
-        if bootmode=="ip":
-            display_ip_info(playpause, display)
-        elif bootmode=="playlist":
-            select_playlists_on_display(back_but_2, display, side_but_1, side_but_2, playpause)
+    # this also sets up the display - ROOT is dropped here, be careful about removing/reordering for security.
+    player = MusicPlayer()
 
     ### Software setup and checks
 
@@ -68,6 +51,10 @@ def start_player(force_local_playback=False):
     except Exception as e:
         print(e) 
         print("Problem setting up Spotipy (python spotify api control).")
+
+    ### Boot Menu
+
+    query_boot_mode(player)
 
     # Check that we can find the raspberry pi in playback devices (if spotifyd is working correctly)
     devices = sp.devices()["devices"]
@@ -93,7 +80,7 @@ def start_player(force_local_playback=False):
     
     current_playback = sp.current_playback()
     print_song_info(current_playback)
-    display.set_coverart(current_playback)   
+    player.display.set_coverart(current_playback)   
 
     # get the playlists that are in rotation, and check if there are any new playlist in account
     # TODO: exceed the limit of 50 playlists (multiple api calls)
@@ -104,26 +91,26 @@ def start_player(force_local_playback=False):
 
     last_poll_time = time.time()  # initialise
     while True:
-        if playpause.got_pressed():
+        if player.playpause.got_pressed():
             if sp.current_playback()["is_playing"]:  # get current playback status (play/pause)
                 print("pausing playback")
                 sp.pause_playback()
-                display.set_display_mode("paused")
+                player.display.set_display_mode("paused")
             else:
                 sp.start_playback()
                 print("starting/resuming playback")
-                display.set_display_mode("")
+                player.display.set_display_mode("")
 
-        elif side_but_1.got_pressed():
+        elif player.sidebutton_1.got_pressed():
             print("> Skipping track")
             sp.next_track()  # go to next track
             # show the next track overlay - it will be cleared when the next track is loaded
-            display.set_display_mode("next_track")  
+            player.display.set_display_mode("next_track")  
             current_playback=sp.current_playback()    
-            display.set_coverart(current_playback)            
+            player.display.set_coverart(current_playback)            
 
-        elif back_but_1.got_pressed():
-            display.set_image_overlay('bla')  # testing
+        elif player.backbutton_1.got_pressed():
+            player.display.set_image_overlay('bla')  # testing
 
         # # check if overlay should be removed
         
@@ -132,7 +119,7 @@ def start_player(force_local_playback=False):
 
         # adjust volume
 
-        slider_volume = int(volumeslider.position()*100)
+        slider_volume = int(player.volumeslider.position()*100)
         if volume != slider_volume:
             print(f'setting volume to {slider_volume} (0-100)')
             audio.setvolume(slider_volume)
@@ -147,7 +134,7 @@ def start_player(force_local_playback=False):
             if current_playback["item"]["id"] != latest_playback["item"]['id']:
                 current_playback = latest_playback  # update current playback for next loop
                 print_song_info(current_playback)
-                display.set_coverart(current_playback)              
+                player.display.set_coverart(current_playback)              
 
             last_poll_time = time.time()
 

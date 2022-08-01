@@ -1,6 +1,24 @@
 import board 
 from digitalio import DigitalInOut, Pull
 
+from display import MusicDisplay
+
+class MusicPlayer:
+    def __init__(self):
+        buttons = initialise_buttons()
+        self.playpause = buttons[0]
+        self.sidebutton_1 = buttons[1]
+        self.sidebutton_2 = buttons[2]
+        self.backbutton_1 = buttons[3]
+        self.backbutton_2 = buttons[4]
+        self.volumeslider = intialise_slider()
+
+        # Set up display - ROOT is dropped here, be careful about removing/reordering for security.
+        self.display = MusicDisplay(64, 64)  # needs root privileges, but those are dropped after this function 
+        # set the boot screen image TODO avoid abs path 
+        self.display.set_image_from_file("/home/musicpi/minimal-music-player/interface/splash_screen.png")  
+
+
 def initialise_buttons():
     # play pause button - wired to SPI0_MOSI
     playpause_button = DigitalInOut(board.MOSI)
@@ -20,10 +38,10 @@ def initialise_buttons():
 
     return [
         PlayerButton(playpause_button),
+        PlayerButton(side_button_1), 
+        PlayerButton(side_button_2),
         PlayerButton(back_button_1),
         PlayerButton(back_button_2),
-        PlayerButton(side_button_1), 
-        PlayerButton(side_button_2)
     ]
 
 class PlayerButton:

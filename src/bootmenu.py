@@ -10,7 +10,7 @@ which allows for a few utility menus/selection panels. Of course the easiest is 
 device, but for quick on the go or for less tech savy users these menus can be useful.
 '''
 
-def query_boot_mode(skip_button, ip_button, playlist_button,display, duration=5):
+def query_boot_mode(player, duration=5):
     '''Main loop that allows for boot mode selection'''
     print(f">> Launching boot menu - limit={duration} sec")
     initial_time = time.time()  
@@ -18,43 +18,43 @@ def query_boot_mode(skip_button, ip_button, playlist_button,display, duration=5)
     
     # wait for button press until 'duration' has passed. If loop expires, then None is returned
     while time.time()-initial_time < duration:
-        if skip_button.got_pressed():
+        if player.playpause.got_pressed():
             print("> Skipped boot menu, launching application as normal")
             return None
-        elif ip_button.got_pressed():
+        elif player.backbutton_2.got_pressed():
             print("> Boot menu: selected IP menu")
             return "ip"
-        elif playlist_button.got_pressed():
+        elif player.backbutton_1.got_pressed():
             print("> Boot menu: selected playlist selection")
             return "playlist"
         # update the text on display once per second
         if seconds_since_start != math.floor(time.time()-initial_time):
             seconds_since_start = math.floor(time.time()-initial_time)
-            display.add_text_overlay(f"booting in {duration-seconds_since_start}", (32, 60),
+            player.display.add_text_overlay(f"booting in {duration-seconds_since_start}", (32, 60),
              dimming=0, fill=(255,255,255,200), clear=True)  
         time.sleep(0.01)
 
     print("> Boot menu expired, launching application as normal")
-    display.add_text_overlay(f"starting...", (32, 60),
+    player.display.add_text_overlay(f"starting...", (32, 60),
              dimming=0.7, fill=(255,255,255,200), clear=True)  
     return None  # if we wait the full duration
 
-def display_ip_info(ok_button, display):
+def display_ip_info(player):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     print(f"IP Address of {socket.gethostname()}: {s.getsockname()[0]}")
-    display.set_image_from_file("/home/musicpi/minimal-music-player/interface/ip_screen.png")  # TODO avoid abs path
-    display.add_text_overlay(str(s.getsockname()[0]), (32, 50),
+    player.display.set_image_from_file("/home/musicpi/minimal-music-player/interface/ip_screen.png")  # TODO avoid abs path
+    player.display.add_text_overlay(str(s.getsockname()[0]), (32, 50),
              dimming=0, fill=(255,255,255,200), clear=True)  
 
     # wait until ok button is pressed
-    while not ok_button.got_pressed():
+    while not player.playpause.got_pressed():
         time.sleep(0.03)
 
     # user pressed ok button, let them know
-    display.add_text_overlay(f"starting...", (32, 50),
+    player.display.add_text_overlay(f"starting...", (32, 50),
              dimming=0.9, fill=(255,255,255,200), clear=True)  
 
 
-def select_playlists_on_display(ok_button, display, up_button, down_button, toggle_button):
+def select_playlists_on_display(player):
     return 
