@@ -3,7 +3,7 @@ import requests  # downloading image
 from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 import time
-
+import math
 import os  # needed to drop root privs
 
 sys.path.append('/home/musicpi/rpi-rgb-led-matrix/bindings/python/rgbmatrix')
@@ -82,7 +82,15 @@ class MusicDisplay:
         draw = ImageDraw.Draw(self.overlay)
         if clear: 
             draw.rectangle((0,0,self.width, self.height), fill=(0,0,0,0))
-        draw.text(location, text, anchor="mm", font=self.font, fill=fill)
+
+        # determine initial location of first letter (center alignment)
+        offset = -math.floor(sum([self.font.getsize(letter)[0]-1 for letter in text])/2) 
+        for i, letter in enumerate(text):
+            basewidth, _ = self.font.getsize(letter)
+            letter_loc = (location[0]+offset, location[1])
+            draw.text(letter_loc, letter, anchor="lm", font=self.font, fill=fill)  
+            offset += basewidth-1  # update location for next letter, we reduce the native kerning by 1px     
+        
         composite = self.coverart.copy()  # make a copy of the coverart
         composite = Image.eval(composite, (lambda pix: pix*(1-dimming)))  # lower intensity
         composite.paste(self.overlay, (0,0), self.overlay)  # add overlay on top of coverart
