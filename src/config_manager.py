@@ -1,6 +1,11 @@
 import configparser
 import re
 
+def get_device_config():
+    config = configparser.ConfigParser()
+    config.read("config/player.ini")
+    return config
+
 def update_playlists(playlists):
     '''Updates and returns the user playlists that are 'in rotation' per the playlist.ini configuration file
     

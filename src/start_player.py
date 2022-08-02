@@ -14,17 +14,12 @@ import alsaaudio
 from read_cache_into_environment import get_spotipy_auth
 from setup_hardware import MusicPlayer
 from bootmenu import query_boot_mode
-from config_manager import update_playlists, get_playlists_in_config
+from config_manager import update_playlists, get_playlists_in_config, get_device_config
 from utils import print_song_info, has_internet_connection, has_bluetooth_connection
 
 ''''Raspberry pi music player'''
 def start_player(force_local_playback=False, force_playlists=False):
     print("Starting music player...")
-
-    # TODO move to config
-    poll_freq = 2  # how many seconds between playback status checks (to see if song changed etc)  
-    playlist_index = 0
-    bluetooth_MAC = "70:99:1C:33:1B:B9"
 
     ### Hardware setup - create a new MusicPlayer object  
 
@@ -33,6 +28,10 @@ def start_player(force_local_playback=False, force_playlists=False):
 
     ### Software setup and checks
 
+    config = get_device_config()
+    playlist_index = int(config['playback']['currrent-playlist-index'])
+    poll_period = float(config['settings']['playback-poll-period'])
+
     # wifi and internet checks
     if not has_internet_connection:        
         player.display.set_display_mode("no_wifi")
@@ -40,7 +39,7 @@ def start_player(force_local_playback=False, force_playlists=False):
         input("Press enter key to quit"); quit()
 
     # bluetooth checks
-    if not has_bluetooth_connection(bluetooth_MAC):        
+    if not has_bluetooth_connection(config['connectivity']['bluetooth-mac']):        
         player.display.set_display_mode("no_bluetooth_audio")
         print("[setup] No bluetooth audio connection available!")
         input("Press enter to quit"); quit()
@@ -172,9 +171,8 @@ def start_player(force_local_playback=False, force_playlists=False):
             audio.setvolume(slider_volume)
             volume = slider_volume 
 
-        # check for song changes
-
-        if time.time() - last_poll_time > 1:  # check current playback status for changes
+        # check current playback status for changes
+        if time.time() - last_poll_time > poll_period: 
             latest_playback = sp.current_playback()             
 
             # check if the song has changed (by 'item' id)
