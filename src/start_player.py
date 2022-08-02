@@ -76,8 +76,8 @@ def start_player(force_local_playback=False, force_playlists=False):
     if force_local_playback or current_device == None:
         # we get the current device name. If no spotify app is opened elsewhere, current_device==None
         current_device_name = 'none' if current_device == None else current_device['name']
-        print(f"Switching from {current_device_name} to Raspberry Pi for playback \
-             (--forcelocal is set to True)")
+        print(f"[flag:force-local-playback] Switching from {current_device_name} to Raspberry " 
+             "Pi for playback (--forcelocal is set to True)")
         # find the raspberry pi in devices
         current_device = next(filter(lambda device: device["name"]=="Music_Pi", devices))        
         # and switch to it
@@ -96,8 +96,10 @@ def start_player(force_local_playback=False, force_playlists=False):
         sp.start_playback(current_device["id"], playlists[playlist_index][1])
     elif force_playlists:  # we are already playing somethign (from e.g. phone) 
         # we check if the current song is in the playlists config, and otherwise switch to one
-        # that is in the playlist config 'in rotation' section
-        sp.start_playback(current_device["id"], playlists[playlist_index][1])
+        # that is in the playlist config 'in rotation' section.
+        if current_playback['context']['uri'] not in map(lambda x: x[1], playlists):
+            print("[flag:force-playlist] switching from ignored/unknown playlist to an in-rotation playlist")
+            sp.start_playback(current_device["id"], playlists[playlist_index][1])
     
     # fetch and display the intial playback state
     print("Currently playing:")
