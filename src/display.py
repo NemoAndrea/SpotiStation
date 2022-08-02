@@ -78,7 +78,7 @@ class MusicDisplay:
         self.display.SetImage(self.coverart.convert('RGB'))
 
     
-    def add_text_overlay(self, text, location, dimming=0.9, fill=(255,255,255,255), clear=False, center=True):        
+    def add_text_to_overlay(self, text, location, fill=(255,255,255,255), clear=False, center=True):        
         draw = ImageDraw.Draw(self.overlay)
         if clear: 
             draw.rectangle((0,0,self.width, self.height), fill=(0,0,0,0))
@@ -93,7 +93,9 @@ class MusicDisplay:
             letter_loc = (location[0]+offset, location[1])
             draw.text(letter_loc, letter, anchor="lm", font=self.font, fill=fill)  
             offset += basewidth-1  # update location for next letter, we reduce the native kerning by 1px     
-        
+            
+
+    def add_overlay_to_display(self, dimming):
         composite = self.coverart.copy()  # make a copy of the coverart
         composite = Image.eval(composite, (lambda pix: pix*(1-dimming)))  # lower intensity
         composite.paste(self.overlay, (0,0), self.overlay)  # add overlay on top of coverart

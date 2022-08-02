@@ -1,3 +1,4 @@
+from curses import flash
 import socket
 import time
 import math
@@ -30,15 +31,16 @@ def query_boot_mode(player, duration=5):
         # update the text on display once per second
         if seconds_since_start != math.floor(time.time()-initial_time):
             seconds_since_start = math.floor(time.time()-initial_time)
-            player.display.add_text_overlay("Press button", (32, 52),
-             dimming=0.5, fill=(255,255,255,200), clear=True)  
-            player.display.add_text_overlay(f"for config {duration-seconds_since_start}", (32, 60),
-             dimming=0.5, fill=(255,255,255,200), clear=False)  
+            player.display.add_text_to_overlay("Press button", (32, 52),
+             fill=(255,255,255,200), clear=True)  
+            player.display.add_text_to_overlay(f"for config {duration-seconds_since_start}", (32, 60),
+             fill=(255,255,255,200), clear=False)  
+            player.display.add_overlay_to_display(dimming=0.5)
         time.sleep(0.01)
 
     print("> Leaving Boot Menu, launching application as normal")
-    player.display.add_text_overlay(f"starting...", (32, 60),
-             dimming=0.7, fill=(255,255,255,200), clear=True)  
+    player.display.add_text_to_overlay(f"starting...", (32, 60), fill=(255,255,255,200), clear=True)  
+    player.display.add_overlay_to_display(dimming=0.7)
     time.sleep(0.5)
     return None  # if we wait the full duration
 
@@ -54,8 +56,7 @@ def display_config_menu(player, duration=30):
     
     # wait for button press until 'duration' has passed. If loop expires, then None is returned
     while time.time()-initial_time < duration:
-        player.display.add_text_overlay("Config Menu", (32, 5),
-             dimming=0.9, fill=(0,139,139,255), clear=True)        
+        player.display.add_text_to_overlay("Config Menu", (32, 5), fill=(0,139,139,255), clear=True)        
 
         # display the options on screen
         for i, option in enumerate(options):
@@ -65,8 +66,11 @@ def display_config_menu(player, duration=30):
             else:
                 color = (255,255,255,180)
                 textfill = ""  # no leading text
-            player.display.add_text_overlay(f"{textfill}{option}", (10, 14+i*6),
-            dimming=0.9, fill=color, clear=False, center=False) 
+            player.display.add_text_to_overlay(f"{textfill}{option}", (10, 14+i*6),
+             fill=color, clear=False, center=False) 
+
+        # actually show the overlay
+        player.display.add_overlay_to_display(dimming=0.9)  
 
         # the playpause button serves as the 'select' key, so when that is pressed we choose that option 
         if player.playpause.got_pressed(): 
@@ -108,13 +112,13 @@ def select_playlists_on_display(player):
     display_limit = 8  # how many items for on one screen
     playlists = get_playlists_in_config_as_sorted_list()
     playlists.insert(0, ["-- save --", False])
-    print(playlists)
     caroussel_offset = 0  # keep track of which playlists fit on the screen
     cursor_position = 0
-    while True:
-        player.display.add_text_overlay("playlist state", (32, 5),
-             dimming=0.9, fill=(0,139,139,255), clear=True)
-        
+    while True:        
+        # show page header
+        player.display.add_text_to_overlay("playlist state", (32, 5), fill=(0,139,139,255), clear=True)
+
+        # show playlists
         for i, (playlist, in_rotation) in enumerate(playlists):
             if caroussel_offset <= i < caroussel_offset+display_limit:  
                 # do nothing if i=0 and caroussel>0, as then i=0 location is occupied by 'more'                  
@@ -126,17 +130,19 @@ def select_playlists_on_display(player):
                     else:
                         filltext = ""
                         text_x = 5
-                    player.display.add_text_overlay(f"{filltext}{playlist}", (text_x, 12 + (i-caroussel_offset)*6),
-                        dimming=0.9, fill=color, clear=False, center=False)
+                    player.display.add_text_to_overlay(f"{filltext}{playlist}", (text_x, 12 +
+                     (i-caroussel_offset)*6), fill=color, clear=False, center=False)
 
         # display '...MORE' if more content can be revelead by scroll (moving cursor)
         if display_limit+caroussel_offset-1 < len(playlist):
-            player.display.add_text_overlay(f"...more", (5, 60),
-                    dimming=0.9, fill=(248,221,116,255), clear=False, center=False)
+            player.display.add_text_to_overlay("...more", (5, 60), fill=(248,221,116,255),
+             clear=False, center=False)
         if caroussel_offset > 0:
-            player.display.add_text_overlay(f"...more", (5, 12),
-                    dimming=0.9, fill=(248,221,116,255), clear=False, center=False)
-
+            player.display.add_text_to_overlay("...more", (5, 12), fill=(248,221,116,255),
+             clear=False, center=False)     
+        
+        # actually show the overlay
+        player.display.add_overlay_to_display(dimming=0.9)     
 
         if player.sidebutton_2.got_pressed():
             if cursor_position > 0:  # check we cannot exceed the list of options
