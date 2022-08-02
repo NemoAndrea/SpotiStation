@@ -2,7 +2,7 @@ import configparser
 import re
 
 def get_device_config():
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(allow_no_value=True)
     config.read("config/player.ini")
     return config
 
@@ -70,4 +70,10 @@ def write_playlist_config(config):
     config.set('ignored', '# playlists in this section will be ignored by the music player')
     config.set('ignored', '# new playlists in spotify will automatically be added here when player boots')
     with open('config/playlists.ini', 'w') as fp:
+        config.write(fp)
+
+def write_device_config(config):
+    # add some comments to make it clearer what the structure of the config is
+    config.set('connectivity', '# use a separate device (e.g. phone) to get this adress for your bluetooth device')
+    with open('config/player.ini', 'w') as fp:
         config.write(fp)

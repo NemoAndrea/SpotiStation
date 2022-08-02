@@ -63,6 +63,8 @@ class MusicDisplay:
             self.set_image_overlay("./media/interface/no_wifi.png")
         elif mode == "no_bluetooth_audio":
             self.set_image_overlay("./media/interface/no_bluetooth.png")
+        elif mode == "no_spotifyd":
+            self.set_image_overlay("./media/interface/no_spotifyd.png")
         else:
             self.display.SetImage(self.coverart)  # just use whatever the current song image is 
             self.overlay = None  # reset overlay

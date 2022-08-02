@@ -214,6 +214,50 @@ Now we are paired (**but not connected**) with the device - this is the one-time
 connect <MAC adress
 ```
 
+## Setup - run music player as service
+
+We need to ensure the music player runs as a service upon startup. We use the same approach as before, but specify that we want to run this as root, but still as a user.
+
+> I must admit here that I am not entirely too sure how this whole root thing works, as a normal systemctl process (in /lib/) would make more sense, but that has no access to the  python environment so I am just going with what is below - which seems to work fine.
+
+```
+nano ~/.config/systemd/user/rpi-spotiplayer.service
+```
+
+We make the contents of the file the following:
+
+```
+[Unit]
+Description=A python spotify music player service
+Requisite=spotifyd.service 
+After=spotifyd.service
+
+[Service]
+Type=simple 
+Restart=on-failure
+RestartSec=15s
+ 
+WorkingDirectory=/home/musicpi/minimal-music-player
+ExecStart=/usr/bin/sudo -E /usr/bin/python /home/musicpi/minimal-music-player/src/start_player.py
+
+[Install]  
+WantedBy=default.target
+
+```
+
+We make it active via: 
+```
+ sudo chmod 644 ~/.config/systemd/user/rpi-spotiplayer.service
+```
+
+And then we update our `systemctl` process by running `sudo systemctl --user daemon-reload`. As before, it is good to see if it works before making it run on startup by running `systemctl --user start rpi-spotiplayer.service`. That should start the player as normal after few seconds. 
+
+If that all seems to work well, stop the process and set it up for running at boot:
+
+```
+systemctl --user enable rpi-spotiplayer.service
+```
+
 ### Acknowledgements
 
 The programmatically generated text in the UI uses the [silkscreen font by Jason Kottke](https://kottke.org/plus/type/silkscreen/). It is converted to a PIL font for display purposes.

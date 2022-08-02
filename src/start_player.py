@@ -14,7 +14,7 @@ import alsaaudio
 from read_cache_into_environment import get_spotipy_auth
 from setup_hardware import MusicPlayer
 from bootmenu import query_boot_mode
-from config_manager import update_playlists, get_playlists_in_config, get_device_config
+from config_manager import update_playlists, get_playlists_in_config, get_device_config, write_device_config
 from utils import print_song_info, has_internet_connection, has_bluetooth_connection
 
 ''''Raspberry pi music player'''
@@ -36,21 +36,23 @@ def start_player(force_local_playback=False, force_playlists=False):
     if not has_internet_connection:        
         player.display.set_display_mode("no_wifi")
         print("[setup] No internet connection available!")
-        input("Press enter key to quit"); quit()
+        time.sleep(60); quit()
 
     # bluetooth checks
     if not has_bluetooth_connection(config['connectivity']['bluetooth-mac']):        
         player.display.set_display_mode("no_bluetooth_audio")
         print("[setup] No bluetooth audio connection available!")
-        input("Press enter to quit"); quit()
+        time.sleep(60); quit()
 
     # volume control
     audio = alsaaudio.Mixer()  # default settings should work
     volume = audio.getvolume()[0]  # intialise volume [0-100]
 
     # check if the spotifyd service is running
-    assert os.system('systemctl --user is-active --quiet spotifyd.service')==0,  "Spotifyd daemon \
-        is not running"
+    if not os.system('systemctl --user is-active --quiet spotifyd.service')==0:
+        player.display.set_display_mode("no_spotifyd")
+        print("[setup] Spotifyd daemon is not running")
+        time.sleep(60); quit()
 
     # quick and dirty get the id, secret and redirect URL into environment variable
     # this assumes the cache_spotipy_credentials.py has been run and .cache was generated before
@@ -145,13 +147,16 @@ def start_player(force_local_playback=False, force_playlists=False):
             player.display.set_coverart(current_playback)    
 
         elif player.sidebutton_2.got_pressed():
-            playlist_index = (playlist_index + 1) % len(playlists)  # TODO save to config
+            playlist_index = (playlist_index + 1) % len(playlists)
             print(f"> Switching playlist to '{playlists[playlist_index][0]}'") 
             # switch to next playlist
             sp.start_playback(current_device["id"], playlists[playlist_index][1])
             # show the next playlist overlay - it will be cleared when the next track is loaded
             player.display.set_display_mode("next_playlist")  
+            config['playback']['current-playlist-index'] = str(playlist_index)
+            write_device_config(config)  # update the file on disk
             time.sleep(1)  # ensure the overlay is visible
+
             current_playback=sp.current_playback()    
             player.display.set_coverart(current_playback)
 
@@ -173,7 +178,12 @@ def start_player(force_local_playback=False, force_playlists=False):
 
         # check current playback status for changes
         if time.time() - last_poll_time > poll_period: 
-            latest_playback = sp.current_playback()             
+            latest_playback = sp.current_playback()  
+
+            # this is only in case we pause spotify on another device (e.g. phone) - this avoids 
+            # the display pause/play state getting out of sync
+            if sp.current_playback()["is_playing"]: player.display.set_display_mode("")
+            else: player.display.set_display_mode("paused")
 
             # check if the song has changed (by 'item' id)
             if current_playback["item"]["id"] != latest_playback["item"]['id']:
