@@ -29,7 +29,7 @@ def start_player(force_local_playback=False, force_playlists=False):
     ### Software setup and checks
 
     config = get_device_config()
-    playlist_index = int(config['playback']['currrent-playlist-index'])
+    playlist_index = int(config['playback']['current-playlist-index'])
     poll_period = float(config['settings']['playback-poll-period'])
 
     # wifi and internet checks
