@@ -59,13 +59,17 @@ class MusicDisplay:
             self.set_image_overlay("/home/musicpi/minimal-music-player/interface/next_track.png")
         elif mode == "next_playlist":
             self.set_image_overlay("/home/musicpi/minimal-music-player/interface/next_playlist.png")
+        elif mode == "no_wifi":
+            self.set_image_overlay("/home/musicpi/minimal-music-player/interface/no_wifi.png")
+        elif mode == "no_bluetooth_audio":
+            self.set_image_overlay("/home/musicpi/minimal-music-player/interface/no_bluetooth.png")
         else:
             self.display.SetImage(self.coverart)  # just use whatever the current song image is 
             self.overlay = None  # reset overlay
 
     # TODO load these into memory
     def set_image_overlay(self, overlay_file, dimming=0.9):
-        print(f"setting overlay: {overlay_file}")
+        #print(f"setting overlay: {overlay_file}")
 
         self.overlay = Image.open(overlay_file)  # load the overlay
         composite = self.coverart.copy()  # make a copy of the coverart

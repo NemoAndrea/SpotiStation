@@ -15,7 +15,7 @@ from read_cache_into_environment import get_spotipy_auth
 from setup_hardware import MusicPlayer
 from bootmenu import query_boot_mode
 from config_manager import update_playlists, get_playlists_in_config
-from utils import print_song_info
+from utils import print_song_info, has_internet_connection, has_bluetooth_connection
 
 ''''Raspberry pi music player'''
 def start_player(force_local_playback=False, force_playlists=False):
@@ -24,6 +24,7 @@ def start_player(force_local_playback=False, force_playlists=False):
     # TODO move to config
     poll_freq = 2  # how many seconds between playback status checks (to see if song changed etc)  
     playlist_index = 0
+    bluetooth_MAC = "70:99:1C:33:1B:B9"
 
     ### Hardware setup - create a new MusicPlayer object  
 
@@ -31,6 +32,18 @@ def start_player(force_local_playback=False, force_playlists=False):
     player = MusicPlayer()
 
     ### Software setup and checks
+
+    # wifi and internet checks
+    if not has_internet_connection:        
+        player.display.set_display_mode("no_wifi")
+        print("[setup] No internet connection available!")
+        input("Press enter key to quit"); quit()
+
+    # bluetooth checks
+    if not has_bluetooth_connection(bluetooth_MAC):        
+        player.display.set_display_mode("no_bluetooth_audio")
+        print("[setup] No bluetooth audio connection available!")
+        input("Press enter to quit"); quit()
 
     # volume control
     audio = alsaaudio.Mixer()  # default settings should work
@@ -76,8 +89,11 @@ def start_player(force_local_playback=False, force_playlists=False):
     if force_local_playback or current_device == None:
         # we get the current device name. If no spotify app is opened elsewhere, current_device==None
         current_device_name = 'none' if current_device == None else current_device['name']
-        print(f"[flag:force-local-playback] Switching from {current_device_name} to Raspberry " 
-             "Pi for playback (--forcelocal is set to True)")
+        if force_local_playback:
+            print(f"[flag:force-local-playback] Switching from {current_device_name} to Raspberry " 
+             "Pi for playback (--forcelocal is set to True )")
+        else:
+            print(f"Switching from {current_device_name} to Raspberry Pi for playback")
         # find the raspberry pi in devices
         current_device = next(filter(lambda device: device["name"]=="Music_Pi", devices))        
         # and switch to it
@@ -130,8 +146,8 @@ def start_player(force_local_playback=False, force_playlists=False):
             player.display.set_coverart(current_playback)    
 
         elif player.sidebutton_2.got_pressed():
-            print("> Switching playlist")
             playlist_index = (playlist_index + 1) % len(playlists)  # TODO save to config
+            print(f"> Switching playlist to '{playlists[playlist_index][0]}'") 
             # switch to next playlist
             sp.start_playback(current_device["id"], playlists[playlist_index][1])
             # show the next playlist overlay - it will be cleared when the next track is loaded
