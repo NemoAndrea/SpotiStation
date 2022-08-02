@@ -54,15 +54,15 @@ class MusicDisplay:
 
     def set_display_mode(self, mode):
         if mode == "paused":
-            self.set_image_overlay("/home/musicpi/minimal-music-player/interface/paused.png")
+            self.set_image_overlay("./media/interface/paused.png")
         elif mode == "next_track":
-            self.set_image_overlay("/home/musicpi/minimal-music-player/interface/next_track.png")
+            self.set_image_overlay("./media/interface/next_track.png")
         elif mode == "next_playlist":
-            self.set_image_overlay("/home/musicpi/minimal-music-player/interface/next_playlist.png")
+            self.set_image_overlay("./media/interface/next_playlist.png")
         elif mode == "no_wifi":
-            self.set_image_overlay("/home/musicpi/minimal-music-player/interface/no_wifi.png")
+            self.set_image_overlay("./media/interface/no_wifi.png")
         elif mode == "no_bluetooth_audio":
-            self.set_image_overlay("/home/musicpi/minimal-music-player/interface/no_bluetooth.png")
+            self.set_image_overlay("./media/interface/no_bluetooth.png")
         else:
             self.display.SetImage(self.coverart)  # just use whatever the current song image is 
             self.overlay = None  # reset overlay

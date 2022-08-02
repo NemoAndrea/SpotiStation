@@ -15,8 +15,8 @@ class MusicPlayer:
 
         # Set up display - ROOT is dropped here, be careful about removing/reordering for security.
         self.display = MusicDisplay(64, 64)  # needs root privileges, but those are dropped after this function 
-        # set the boot screen image TODO avoid abs path 
-        self.display.set_image_from_file("/home/musicpi/minimal-music-player/interface/splash_screen.png")  
+        # set the boot screen image 
+        self.display.set_image_from_file("./media/interface/splash_screen.png")  
 
 
 def initialise_buttons():

@@ -99,17 +99,16 @@ def display_ip_info(player):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     print(f"IP Address of {socket.gethostname()}: {s.getsockname()[0]}")
-    player.display.set_image_from_file("/home/musicpi/minimal-music-player/interface/ip_screen.png")  # TODO avoid abs path
-    player.display.add_text_overlay(str(s.getsockname()[0]), (32, 50),
-             dimming=0, fill=(255,255,255,200), clear=True)  
+    player.display.set_image_from_file("./media/interface/ip_screen.png")
+    player.display.add_text_to_overlay(str(s.getsockname()[0]), (32, 50),
+     fill=(255,255,255,200), clear=True)  
+    player.display.add_overlay_to_display(dimming=0)  
 
     # wait until ok button is pressed
     while not player.playpause.got_pressed():
         time.sleep(0.03)
 
-    # user pressed ok button, let them know
-    player.display.add_text_overlay(f"starting...", (32, 50),
-             dimming=0.9, fill=(255,255,255,200), clear=True)  
+    return  # leave the menu and boot
 
 
 def select_playlists_on_display(player):
