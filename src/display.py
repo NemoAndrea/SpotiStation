@@ -57,6 +57,8 @@ class MusicDisplay:
             self.set_image_overlay("/home/musicpi/minimal-music-player/interface/paused.png")
         elif mode == "next_track":
             self.set_image_overlay("/home/musicpi/minimal-music-player/interface/next_track.png")
+        elif mode == "next_playlist":
+            self.set_image_overlay("/home/musicpi/minimal-music-player/interface/next_playlist.png")
         else:
             self.display.SetImage(self.coverart)  # just use whatever the current song image is 
             self.overlay = None  # reset overlay

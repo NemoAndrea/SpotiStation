@@ -14,15 +14,16 @@ import alsaaudio
 from read_cache_into_environment import get_spotipy_auth
 from setup_hardware import MusicPlayer
 from bootmenu import query_boot_mode
-from config_manager import update_playlists
+from config_manager import update_playlists, get_playlists_in_config
 from utils import print_song_info
 
 ''''Raspberry pi music player'''
-def start_player(force_local_playback=False):
+def start_player(force_local_playback=False, force_playlists=False):
     print("Starting music player...")
 
     # TODO move to config
     poll_freq = 2  # how many seconds between playback status checks (to see if song changed etc)  
+    playlist_index = 0
 
     ### Hardware setup - create a new MusicPlayer object  
 
@@ -52,6 +53,9 @@ def start_player(force_local_playback=False):
         print(e) 
         print("Problem setting up Spotipy (python spotify api control).")
 
+    
+    # TODO: check bluetooth status
+
     ### Boot Menu
 
     query_boot_mode(player)
@@ -67,27 +71,41 @@ def start_player(force_local_playback=False):
 
     # when lanching the player, you may not want to switch to the local device for playback 
     # as you may want to listen on your phone or other set of speakers not controlled by raspberry
-    current_device = next(filter(lambda device: device["is_active"], devices))
-    if force_local_playback:
-        print(f"Switching from {current_device['name']} to Raspberry Pi for playback \
+    # if NO device is active, we switch to RPi too, as we need something to play on
+    current_device = next(filter(lambda device: device["is_active"], devices), None)
+    if force_local_playback or current_device == None:
+        # we get the current device name. If no spotify app is opened elsewhere, current_device==None
+        current_device_name = 'none' if current_device == None else current_device['name']
+        print(f"Switching from {current_device_name} to Raspberry Pi for playback \
              (--forcelocal is set to True)")
         # find the raspberry pi in devices
         current_device = next(filter(lambda device: device["name"]=="Music_Pi", devices))        
         # and switch to it
-        sp.transfer_playback(current_device["id"])     
-
-    print("Currently playing:")
-    
-    current_playback = sp.current_playback()
-    print_song_info(current_playback)
-    player.display.set_coverart(current_playback)   
+        sp.transfer_playback(current_device["id"])    
 
     # get the playlists that are in rotation, and check if there are any new playlist in account
-    # TODO: exceed the limit of 50 playlists (multiple api calls)
+    # TODO: handle the limit of 50 playlists (multiple api calls)
+    api_playlists = sp.current_user_playlists()
+    update_playlists(api_playlists['items'])
+    playlists = get_playlists_in_config()['in rotation']
 
-    all_playlists = sp.current_user_playlists()
-    playlists = update_playlists(all_playlists['items'])
-    # TODO: automatically select playlist and add flag to accept current playlist even if not in rotation?
+    # try to find out what we are playing/will be playing
+    current_playback = sp.current_playback()  # we might already be playing something
+    if current_playback == None:  
+        # we select a song to queue up from the 'in rotation' playlists
+        sp.start_playback(current_device["id"], playlists[playlist_index][1])
+    elif force_playlists:  # we are already playing somethign (from e.g. phone) 
+        # we check if the current song is in the playlists config, and otherwise switch to one
+        # that is in the playlist config 'in rotation' section
+        sp.start_playback(current_device["id"], playlists[playlist_index][1])
+    
+    # fetch and display the intial playback state
+    print("Currently playing:")
+    print_song_info(current_playback)
+    player.display.set_coverart(current_playback)  # show the coverart
+    if not sp.current_playback()["is_playing"]: player.display.set_display_mode("paused")
+
+    ### Main device loop
 
     last_poll_time = time.time()  # initialise
     while True:
@@ -107,7 +125,18 @@ def start_player(force_local_playback=False):
             # show the next track overlay - it will be cleared when the next track is loaded
             player.display.set_display_mode("next_track")  
             current_playback=sp.current_playback()    
-            player.display.set_coverart(current_playback)            
+            player.display.set_coverart(current_playback)    
+
+        elif player.sidebutton_2.got_pressed():
+            print("> Switching playlist")
+            playlist_index = (playlist_index + 1) % len(playlists)  # TODO save to config
+            # switch to next playlist
+            sp.start_playback(current_device["id"], playlists[playlist_index][1])
+            # show the next playlist overlay - it will be cleared when the next track is loaded
+            player.display.set_display_mode("next_playlist")  
+            time.sleep(1)  # ensure the overlay is visible
+            current_playback=sp.current_playback()    
+            player.display.set_coverart(current_playback)
 
         elif player.backbutton_1.got_pressed():
             player.display.set_image_overlay('bla')  # testing
@@ -143,10 +172,12 @@ def start_player(force_local_playback=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 'Start the Raspberry Pi music player')
-    parser.add_argument('--forcelocal', '-fl', help='Switch current spotify playback device to \
-        raspberry pi when launching.', action="store_true")
+    parser.add_argument('--forcelocal', '-fl', help='Switch current spotify playback device to '
+        'raspberry pi when launching.', action="store_true")
+    parser.add_argument('--forceplaylists', '-fp', help='Switch playlist if current playlist is ' 
+        'is not part of the "in rotation" section in the playlist config file.', action="store_true")
     args = parser.parse_args()
 
     
 
-    start_player(args.forcelocal)
+    start_player(args.forcelocal, args.forceplaylists)

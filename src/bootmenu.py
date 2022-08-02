@@ -52,7 +52,7 @@ def display_config_menu(player, duration=30):
     someone accidentally opened the menu and is not sure what to do.'''
     initial_time = time.time()  
     current_item_index = 0  # current item in list that is selected
-    options = ["-- exit --", "playlists", "ip adress"]
+    options = ["-- exit --", "playlists", "ip adress"]  #TODO: bluetooth connection menu?
     
     # wait for button press until 'duration' has passed. If loop expires, then None is returned
     while time.time()-initial_time < duration:
@@ -61,7 +61,7 @@ def display_config_menu(player, duration=30):
         # display the options on screen
         for i, option in enumerate(options):
             if current_item_index == i:
-                color = (0,255,0,230)  # make text green
+                color = (248,221,116,255)  # make text yellow
                 textfill = "> "  # add '> {optiontext}' to further clarify that this option is selected
             else:
                 color = (255,255,255,180)
@@ -92,6 +92,10 @@ def display_config_menu(player, duration=30):
 
 
 def display_ip_info(player):
+    '''Display the local IP adress on screen for SSH connection
+    
+    Show the local IP adress on screen. In case you need to connect to the device via SSH but do
+    not use a fixed IP adress. Playpause button will exit the menu and start the player.'''
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     print(f"IP Address of {socket.gethostname()}: {s.getsockname()[0]}")
@@ -109,6 +113,12 @@ def display_ip_info(player):
 
 
 def select_playlists_on_display(player):
+    '''Display the user's spotify playlists, their status and change the status
+    
+    Shows all the playlists associated with the spotify account. Green playlists are 'in rotation',
+    while 'gray' playlists are ignored. Use side buttons for up-down navigation and playpause button
+    to toggle the state of the playlist. Use the 'save' option (top of the list) to save config and
+    start the player.'''
     display_limit = 8  # how many items for on one screen
     playlists = get_playlists_in_config_as_sorted_list()
     playlists.insert(0, ["-- save --", False])

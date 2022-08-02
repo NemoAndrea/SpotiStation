@@ -39,17 +39,13 @@ def update_playlists(playlists):
           f"{status['ignored']} playlists being ignored. There were {status['newly_added']} new "
           f"playlist found and added to the 'ignored' section")
 
-    # Return only the 'in rotation' playlists (dict with playlist name as key, and uri as value)
-    # we must remove None values as those are comments
-    return  {k: v for k, v in dict(config["in rotation"]).items() if v is not None}
-
 def get_playlists_in_config():
-    '''Simple function that reads the current playlist config to nested dict'''
+    '''Simple function that reads the current playlist config to list of tuples nested in dict'''
     
     config = configparser.ConfigParser()  # this will ignore comments
     config.read("config/playlists.ini")
 
-    return {s:dict(config.items(s)) for s in config.sections()}
+    return {s:config.items(s) for s in config.sections()}
 
 def get_playlists_in_config_as_sorted_list():
     playlists =  get_playlists_in_config()
@@ -60,6 +56,7 @@ def get_playlists_in_config_as_sorted_list():
         playlists_unsorted.append([playlist_name, False])
 
     return sorted(playlists_unsorted, key=lambda item: item[0])
+
 
 
 def write_playlist_config(config):
