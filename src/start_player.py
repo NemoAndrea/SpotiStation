@@ -12,10 +12,11 @@ from spotipy.oauth2 import SpotifyOAuth
 import alsaaudio
 
 from read_cache_into_environment import get_spotipy_auth
-from setup_hardware import MusicPlayer
+from setup_hardware import MusicPlayer, PlayerState
 from bootmenu import query_boot_mode
 from config_manager import update_playlists, get_playlists_in_config, get_device_config, write_device_config
 from utils import print_song_info, has_internet_connection, has_bluetooth_connection
+from quiet_mode import quiet_mode_active
 
 ''''Raspberry pi music player'''
 def start_player(force_local_playback=False, force_playlists=False):
@@ -36,13 +37,13 @@ def start_player(force_local_playback=False, force_playlists=False):
     if not has_internet_connection:        
         player.display.set_display_mode("no_wifi")
         print("[setup] No internet connection available!")
-        time.sleep(60); quit()
+        time.sleep(30); raise Exception("No internet connection available!")
 
     # bluetooth checks
     if not has_bluetooth_connection(config['connectivity']['bluetooth-mac']):        
         player.display.set_display_mode("no_bluetooth_audio")
         print("[setup] No bluetooth audio connection available!")
-        time.sleep(60); quit()
+        time.sleep(30); raise Exception("No bluetooth audio connection available!")
 
     # volume control
     audio = alsaaudio.Mixer()  # default settings should work
@@ -52,7 +53,7 @@ def start_player(force_local_playback=False, force_playlists=False):
     if not os.system('systemctl --user is-active --quiet spotifyd.service')==0:
         player.display.set_display_mode("no_spotifyd")
         print("[setup] Spotifyd daemon is not running")
-        time.sleep(60); quit()
+        time.sleep(30); raise Exception("Spotifyd daemon is not running")
 
     # quick and dirty get the id, secret and redirect URL into environment variable
     # this assumes the cache_spotipy_credentials.py has been run and .cache was generated before
@@ -66,9 +67,6 @@ def start_player(force_local_playback=False, force_playlists=False):
     except Exception as e:
         print(e) 
         print("Problem setting up Spotipy (python spotify api control).")
-
-    
-    # TODO: check bluetooth status
 
     ### Boot Menu
 
@@ -128,72 +126,100 @@ def start_player(force_local_playback=False, force_playlists=False):
 
     last_poll_time = time.time()  # initialise
     while True:
-        if player.playpause.got_pressed():
-            if sp.current_playback()["is_playing"]:  # get current playback status (play/pause)
-                print("pausing playback")
-                sp.pause_playback()
-                player.display.set_display_mode("paused")
-            else:
-                sp.start_playback()
-                print("starting/resuming playback")
-                player.display.set_display_mode("")
+        if player.state == PlayerState.ACTIVE:
+            if player.playpause.got_pressed():
+                if sp.current_playback()["is_playing"]:  # get current playback status (play/pause)
+                    print("pausing playback")
+                    sp.pause_playback()
+                    player.display.set_display_mode("paused")
+                else:
+                    sp.start_playback()
+                    print("starting/resuming playback")
+                    player.display.set_display_mode("")
 
-        elif player.sidebutton_1.got_pressed():
-            print("> Skipping track")
-            sp.next_track()  # go to next track
-            # show the next track overlay - it will be cleared when the next track is loaded
-            player.display.set_display_mode("next_track")  
-            current_playback=sp.current_playback()    
-            player.display.set_coverart(current_playback)    
+            elif player.sidebutton_1.got_pressed():
+                print("> Skipping track")
+                sp.next_track()  # go to next track
+                # show the next track overlay - it will be cleared when the next track is loaded
+                player.display.set_display_mode("next_track")  
+                current_playback=sp.current_playback()    
+                player.display.set_coverart(current_playback)    
 
-        elif player.sidebutton_2.got_pressed():
-            playlist_index = (playlist_index + 1) % len(playlists)
-            print(f"> Switching playlist to '{playlists[playlist_index][0]}'") 
-            # switch to next playlist
-            sp.start_playback(current_device["id"], playlists[playlist_index][1])
-            # show the next playlist overlay - it will be cleared when the next track is loaded
-            player.display.set_display_mode("next_playlist")  
-            config['playback']['current-playlist-index'] = str(playlist_index)
-            write_device_config(config)  # update the file on disk
-            time.sleep(1)  # ensure the overlay is visible
+            elif player.sidebutton_2.got_pressed():
+                playlist_index = (playlist_index + 1) % len(playlists)
+                print(f"> Switching playlist to '{playlists[playlist_index][0]}'") 
+                # switch to next playlist
+                sp.start_playback(current_device["id"], playlists[playlist_index][1])
+                # show the next playlist overlay - it will be cleared when the next track is loaded
+                player.display.set_display_mode("next_playlist")  
+                config['playback']['current-playlist-index'] = str(playlist_index)
+                write_device_config(config)  # update the file on disk
+                time.sleep(1)  # ensure the overlay is visible
 
-            current_playback=sp.current_playback()    
-            player.display.set_coverart(current_playback)
+                current_playback=sp.current_playback()    
+                player.display.set_coverart(current_playback)
 
-        elif player.backbutton_1.got_pressed():
-            player.display.set_image_overlay('bla')  # testing
+            # Handle device getting LOCKED by administrator or user
+            elif config['settings']['lock-mode-enabled'] and player.backbutton_1.got_pressed():
+                print(f"Entering LOCKED mode...")
+                player.state = PlayerState.LOCKED
 
-        # # check if overlay should be removed
+            # # check if overlay should be removed
+            
+            # if disp_timer.overlay_expired() and display.overlay != None:
+            #     display.set_display_mode("")  # reset the overlay
+
+            # adjust volume
+
+            slider_volume = int(player.volumeslider.position()*100)
+            if volume != slider_volume:
+                print(f'setting volume to {slider_volume} (0-100)')
+                audio.setvolume(slider_volume)
+                volume = slider_volume 
+
+            # check current playback status for changes
+            if time.time() - last_poll_time > poll_period: 
+                latest_playback = sp.current_playback()  
+
+                # this is only in case we pause spotify on another device (e.g. phone) - this avoids 
+                # the display pause/play state getting out of sync
+                if sp.current_playback()["is_playing"]: player.display.set_display_mode("")
+                else: player.display.set_display_mode("paused")
+
+                # check if the song has changed (by 'item' id)
+                if current_playback["item"]["id"] != latest_playback["item"]['id']:
+                    current_playback = latest_playback  # update current playback for next loop
+                    print_song_info(current_playback)
+                    player.display.set_coverart(current_playback)              
+
+                last_poll_time = time.time()
+
+                # check if we should enable QUIET mode. Don't need to do this often, so we 
+                # put it within this check since it only happens every poll_period
+                if quiet_mode_active(config):
+                    print("Leaving the ACTIVE state for QUIET state.")
+                    player.state = PlayerState.QUIET
+
+            time.sleep(0.05)  # minimum time between ACTIVE loops
+
+        # player in the QUIET state (enabled depending on localtime)
+        elif player.state == PlayerState.QUIET:
+            if not quiet_mode_active(config):
+                print("Leaving the QUIET state and returning to ACTIVE state")
+                player.state = PlayerState.ACTIVE
+            
+            time.sleep(0.3)  # in QUIET mode we don't need to loop fast          
         
-        # if disp_timer.overlay_expired() and display.overlay != None:
-        #     display.set_display_mode("")  # reset the overlay
+        # player is in the LOCKED state (manually enabled by user)
+        elif player.state == PlayerState.LOCKED:
+            # check for quiet mode set time (overrides locked mode)
+            if quiet_mode_active(config):
+                print("Leaving the LOCKED state for QUIET state.")
+                player.state = PlayerState.QUIET
 
-        # adjust volume
-
-        slider_volume = int(player.volumeslider.position()*100)
-        if volume != slider_volume:
-            print(f'setting volume to {slider_volume} (0-100)')
-            audio.setvolume(slider_volume)
-            volume = slider_volume 
-
-        # check current playback status for changes
-        if time.time() - last_poll_time > poll_period: 
-            latest_playback = sp.current_playback()  
-
-            # this is only in case we pause spotify on another device (e.g. phone) - this avoids 
-            # the display pause/play state getting out of sync
-            if sp.current_playback()["is_playing"]: player.display.set_display_mode("")
-            else: player.display.set_display_mode("paused")
-
-            # check if the song has changed (by 'item' id)
-            if current_playback["item"]["id"] != latest_playback["item"]['id']:
-                current_playback = latest_playback  # update current playback for next loop
-                print_song_info(current_playback)
-                player.display.set_coverart(current_playback)              
-
-            last_poll_time = time.time()
-
-        time.sleep(0.05)  # minimum time between loops
+            time.sleep(0.3)  # in LOCKED mode we don't need to loop fast            
+        else:
+            raise Exception("Unknown player state")
 
 
 if __name__ == '__main__':

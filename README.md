@@ -258,6 +258,18 @@ If that all seems to work well, stop the process and set it up for running at bo
 systemctl --user enable rpi-spotiplayer.service
 ```
 
+### .bashrc setup
+
+Nice to have, but not needed
+
+```bash
+alias startplayer='systemctl --user start rpi-spotiplayer.service'
+alias stopplayer='systemctl --user stop rpi-spotiplayer.service'
+alias restartplayer='systemctl --user restart rpi-spotiplayer.service'
+```
+
+
+
 ### Acknowledgements
 
 The programmatically generated text in the UI uses the [silkscreen font by Jason Kottke](https://kottke.org/plus/type/silkscreen/). It is converted to a PIL font for display purposes.

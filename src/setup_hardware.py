@@ -1,5 +1,7 @@
 import board 
 from digitalio import DigitalInOut, Pull
+from enum import Enum, auto
+
 
 from display import MusicDisplay
 
@@ -17,6 +19,14 @@ class MusicPlayer:
         self.display = MusicDisplay(64, 64)  # needs root privileges, but those are dropped after this function 
         # set the boot screen image 
         self.display.set_image_from_file("./media/interface/splash_screen.png")  
+
+        self.state = PlayerState.ACTIVE
+
+
+class PlayerState(Enum):
+    ACTIVE = auto()
+    QUIET = auto()
+    LOCKED = auto()
 
 
 def initialise_buttons():
