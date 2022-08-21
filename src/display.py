@@ -52,6 +52,7 @@ class MusicDisplay:
         self.display.SetImage(self.coverart)
         self.overlay = None  # reset the overlay
 
+    # TODO: maybe just use mode string to fetch file
     def set_display_mode(self, mode):
         if mode == "paused":
             self.set_image_overlay("./media/interface/paused.png")
@@ -65,6 +66,10 @@ class MusicDisplay:
             self.set_image_overlay("./media/interface/no_bluetooth.png")
         elif mode == "no_spotifyd":
             self.set_image_overlay("./media/interface/no_spotifyd.png")
+        elif mode == "quiet_mode":
+            self.set_image_overlay("./media/interface/quiet_mode.png")
+        elif mode == "lock_mode":
+            self.set_image_overlay("./media/interface/lock_mode.png")
         else:
             self.display.SetImage(self.coverart)  # just use whatever the current song image is 
             self.overlay = None  # reset overlay

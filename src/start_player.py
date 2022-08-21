@@ -16,7 +16,7 @@ from setup_hardware import MusicPlayer, PlayerState
 from bootmenu import query_boot_mode
 from config_manager import update_playlists, get_playlists_in_config, get_device_config, write_device_config
 from utils import print_song_info, has_internet_connection, has_bluetooth_connection
-from quiet_mode import quiet_mode_active
+from quiet_mode import quiet_mode_active, enable_quiet_mode, enable_locked_mode
 
 ''''Raspberry pi music player'''
 def start_player(force_local_playback=False, force_playlists=False):
@@ -161,8 +161,9 @@ def start_player(force_local_playback=False, force_playlists=False):
 
             # Handle device getting LOCKED by administrator or user
             elif config['settings']['lock-mode-enabled'] and player.backbutton_1.got_pressed():
-                print(f"Entering LOCKED mode...")
-                player.state = PlayerState.LOCKED
+                print(f"Leaving the ACTIVE state for LOCKED state.")
+                enable_locked_mode(player, sp, config)
+                continue
 
             # # check if overlay should be removed
             
@@ -198,7 +199,8 @@ def start_player(force_local_playback=False, force_playlists=False):
                 # put it within this check since it only happens every poll_period
                 if quiet_mode_active(config):
                     print("Leaving the ACTIVE state for QUIET state.")
-                    player.state = PlayerState.QUIET
+                    enable_quiet_mode(player, sp, config)  # start quiet mode
+                    continue
 
             time.sleep(0.05)  # minimum time between ACTIVE loops
 
@@ -206,8 +208,12 @@ def start_player(force_local_playback=False, force_playlists=False):
         elif player.state == PlayerState.QUIET:
             if not quiet_mode_active(config):
                 print("Leaving the QUIET state and returning to ACTIVE state")
+                # set the volume back to slider val
+                player.unmute(audio) 
                 player.state = PlayerState.ACTIVE
-            
+
+            # set volume to 0 (as someone could still turn ON playback via the API, e.g. via phone)  
+            player.mute(audio)         
             time.sleep(0.3)  # in QUIET mode we don't need to loop fast          
         
         # player is in the LOCKED state (manually enabled by user)
@@ -215,8 +221,9 @@ def start_player(force_local_playback=False, force_playlists=False):
             # check for quiet mode set time (overrides locked mode)
             if quiet_mode_active(config):
                 print("Leaving the LOCKED state for QUIET state.")
-                player.state = PlayerState.QUIET
+                enable_quiet_mode(player, sp, config)  # start quiet mode
 
+            player.mute(audio) 
             time.sleep(0.3)  # in LOCKED mode we don't need to loop fast            
         else:
             raise Exception("Unknown player state")

@@ -19,8 +19,31 @@ class MusicPlayer:
         self.display = MusicDisplay(64, 64)  # needs root privileges, but those are dropped after this function 
         # set the boot screen image 
         self.display.set_image_from_file("./media/interface/splash_screen.png")  
+        self.lastvolume = 0  # variable to hold for the mute/unmute functionality (convenience)
 
         self.state = PlayerState.ACTIVE
+
+    def any_button_got_pressed(self):
+        '''checks if any of the buttons have been pressed.
+        
+        Functionality is the same as got_pressed for PlayerButton, and hence must be called in a loop
+        for it to work properly.'''
+        return any([
+             self.playpause.got_pressed(),
+             self.sidebutton_1.got_pressed(),
+             self.sidebutton_2.got_pressed(),
+             self.backbutton_2.got_pressed(),
+             self.backbutton_1.got_pressed()
+        ])
+
+    def mute(self, sys_audio):
+        self.lastvolume = int(self.volumeslider.position()*100)
+        sys_audio.setvolume(0) 
+
+    def unmute(self, sys_audio):
+        sys_audio.setvolume(self.lastvolume)  
+        
+        
 
 
 class PlayerState(Enum):
