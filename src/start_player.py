@@ -135,6 +135,7 @@ def start_player(force_local_playback=False, force_playlists=False):
                     print("starting/resuming playback")
                     player.display.set_display_mode("")
 
+            # side button 1 -> next track
             elif player.sidebutton_1.got_pressed():
                 print("> Skipping track")
                 sp.next_track()  # go to next track
@@ -143,19 +144,22 @@ def start_player(force_local_playback=False, force_playlists=False):
                 current_playback=sp.current_playback()    
                 player.display.set_coverart(current_playback)    
 
+            # side button 2 -> next playlist
             elif player.sidebutton_2.got_pressed():
                 playlist_index = (playlist_index + 1) % len(playlists)
-                print(f"> Switching playlist to '{playlists[playlist_index][0]}'") 
+                playlist_name = playlists[playlist_index][0]
+                print(f"> Switching playlist to '{playlist_name}'") 
                 # switch to next playlist
                 sp.start_playback(current_device["id"], playlists[playlist_index][1])
                 # show the next playlist overlay - it will be cleared when the next track is loaded
                 player.display.set_display_mode("next_playlist")  
+                playlist_trim = playlist_name[:13] + ".." if len(playlist_name) > 14 else playlist_name
+                player.display.add_text_to_overlay(playlist_trim, (32, 54),
+                    fill=(255,255,255,200), clear=False)  
+                player.display.add_overlay_to_display(dimming=0.9)
                 config['playback']['current-playlist-index'] = str(playlist_index)
                 write_device_config(config)  # update the file on disk
                 time.sleep(1)  # ensure the overlay is visible
-
-                current_playback=sp.current_playback()    
-                player.display.set_coverart(current_playback)
 
             # Handle device getting LOCKED by administrator or user
             elif config['settings']['lock-mode-enabled'] and player.backbutton_1.got_pressed():
