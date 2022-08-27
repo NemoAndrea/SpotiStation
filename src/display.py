@@ -2,7 +2,7 @@ import sys
 import requests  # downloading image
 from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
-import time
+from datetime import datetime, timedelta
 import math
 import os  # needed to drop root privs
 
@@ -23,6 +23,7 @@ class MusicDisplay:
         # we use the silkscreen font by Jason Kottke, which is meant to be used at 
         # 8pt (or multiples of that)
         self.font = ImageFont.truetype('/home/musicpi/minimal-music-player/media/slkscr.ttf',8)  
+        self.timer = DisplayOverlayTimer()
 
         options = RGBMatrixOptions()
         options.rows = int(height)
@@ -114,14 +115,11 @@ class MusicDisplay:
         composite.paste(self.overlay, (0,0), self.overlay)  # add overlay on top of coverart
         self.display.SetImage(composite)
 
-    
-
-    def fade_background(self, factor=0.1):
+    def scale_intensity(self, factor=0.1):
         '''Nondestructively drop the intensity of the image
         
         This decreases the intensity of the image on screen, without changing internal images,
         meaning that when a new image is drawn this will be reset'''
-        print("fading background")
         self.display.SetImage(Image.eval(self.coverart, (lambda pix: pix*factor)))
 
 
@@ -135,16 +133,45 @@ class DisplayOverlayTimer:
     The reason why this exsists (and not just a time.sleep(x)) is that I don't want to hold uo
     the other interface buttons. Maybe subprocess could work for that too but this should do the trick'''
     def __init__(self):
-        self.anchortime = time.time()
-        # if activetime is None the timer will always return false, so that effectively disables it
-        self.activetime = None  
+        self.anchortime = datetime.now()
+        # if timelimit is None the timer will always return false, so that effectively disables it
+        self.timelimit = None  
 
-    def start_timer(self, activetime):
-        self.anchortime = time.time()
-        self.activetime = activetime
+    def start_timer(self, duration):
+        self.anchortime = datetime.now()
+        self.timelimit = timedelta(seconds=duration)
 
-    def overlay_expired(self):
-        if self.activetime:  # to disable the timer you can set anchortime to be None
-            if time.time() - self.anchortime > self.activetime:
+    def reset_timer(self):
+        self.timelimit = None
+
+    def is_enabled(self):
+        '''Is timer enabled or is it reset'''
+        if self.timelimit:
+            return True
+        else:
+            return False
+
+    def is_expired(self):        
+        '''Check if a started timer has completed
+        
+        Function will return False if (1) the timer is not set up or (2) if it is still active.
+        If the timer is expired and this function is called, the timer will return True once, and then
+        reset it self. So you can use it to do a display action exactly once after the timer expires
+        
+        e.g. 
+        ```python        
+        display.set_to_red_color()
+        while True:
+            if cool_button.is_pressed():
+                display.set_to_green_color()  # do something with display that you want active for 5 sec
+                display.timer.start_timer(5)
+            
+            if display.timer.is_expired():
+                display.set_to_red_color()  # do something with display (e.g. reset to original state), will only be called once
+        ```
+        '''
+        if self.timelimit:  # to disable the timer you can set timelimit to be None
+            if datetime.now() - self.anchortime > self.timelimit:
+                self.reset_timer()  # reset the timer, next time it is called it will return False until a new timer is started
                 return True
         return False

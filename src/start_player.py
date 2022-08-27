@@ -16,8 +16,7 @@ from setup_hardware import MusicPlayer, PlayerState
 from bootmenu import query_boot_mode
 from config_manager import update_playlists, get_playlists_in_config, get_device_config, write_device_config
 from utils import print_song_info, has_internet_connection, has_bluetooth_connection
-from quiet_mode import quiet_mode_active, enable_quiet_mode, enable_locked_mode
-
+from quiet_mode import quiet_mode_active, enable_quiet_mode, enable_locked_mode, quiet_mode_enabled_since, set_display_quiet_mode
 ''''Raspberry pi music player'''
 def start_player(force_local_playback=False, force_playlists=False):
     print("Starting music player...")
@@ -211,6 +210,21 @@ def start_player(force_local_playback=False, force_playlists=False):
                 # set the volume back to slider val
                 player.unmute(audio) 
                 player.state = PlayerState.ACTIVE
+                player.display.timer.reset()
+
+            # turn off the display if we have been in quiet mode for over 30 minutes.
+            if quiet_mode_enabled_since(config, 30):
+                # check for button presses, and temporarily light up display if press detected
+                if player.any_button_got_pressed():                    
+                    print("temporarily showing display in QUIET mode")
+                    player.display.timer.start_timer(7)  # show display for 7 seconds 
+                    set_display_quiet_mode(player, config)  
+
+                # if the display timer is active we show the display again, otherwise we turn it off
+                if player.display.timer.is_expired():  
+                    player.display.scale_intensity(0) 
+                elif not player.display.timer.is_enabled():  # default action, turn off display
+                    player.display.scale_intensity(0)                     
 
             # set volume to 0 (as someone could still turn ON playback via the API, e.g. via phone)  
             player.mute(audio)         
