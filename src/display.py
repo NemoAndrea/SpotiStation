@@ -24,6 +24,7 @@ class MusicDisplay:
         # 8pt (or multiples of that)
         self.font = ImageFont.truetype('/home/musicpi/minimal-music-player/media/slkscr.ttf',8)  
         self.timer = DisplayOverlayTimer()
+        self.overlay_mode = None  # keep track of what kind of overlay we are using
 
         options = RGBMatrixOptions()
         options.rows = int(height)
@@ -42,8 +43,6 @@ class MusicDisplay:
         self.display = RGBMatrix(options = options)
         os.setuid(1000)  # set to default user (which we assume is at uid 1000, default for raspbberry pi os)
         
-
-
     def set_coverart(self, spotipy_item):
         url = spotipy_item['item']['album']["images"][0]["url"]
         response = requests.get(url)
@@ -51,10 +50,18 @@ class MusicDisplay:
         image.thumbnail((self.width, self.height), Image.ANTIALIAS)
         self.coverart = image.convert('RGB')
         self.display.SetImage(self.coverart)
-        self.overlay = None  # reset the overlay
+        self.overlay = Image.new('RGBA', (self.width, self.height))  # reset the overlay
 
     # TODO: maybe just use mode string to fetch file
     def set_display_mode(self, mode):
+        '''Display an image on disk as overlay
+        
+        Load an image on disk as overlay. Meant for important overlays. Will reset any active 
+        timers on the display.'''
+        # reset timer (no situation where you set a timer, add a display overlay and STILL want to keep overlay)
+        self.timer.reset_timer()  
+        # load overlay image
+        self.overlay_mode = mode
         if mode == "paused":
             self.set_image_overlay("./media/interface/paused.png")
         elif mode == "next_track":
@@ -73,12 +80,18 @@ class MusicDisplay:
             self.set_image_overlay("./media/interface/lock_mode.png")
         else:
             self.display.SetImage(self.coverart)  # just use whatever the current song image is 
-            self.overlay = None  # reset overlay
+            self.overlay = Image.new('RGBA', (self.width, self.height))   # reset overlay
+            self.overlay_mode = None
+
+    def reset_overlay(self):
+        '''Remove any overlay from display, and show only coverart'''
+        self.overlay = Image.new('RGBA', (self.width, self.height))  # reset overlay
+        self.add_overlay_to_display(dimming=0)  # without overlay this just draws self.coverart
+
 
     # TODO load these into memory
     def set_image_overlay(self, overlay_file, dimming=0.9):
         #print(f"setting overlay: {overlay_file}")
-
         self.overlay = Image.open(overlay_file)  # load the overlay
         composite = self.coverart.copy()  # make a copy of the coverart
         composite = Image.eval(composite, (lambda pix: pix*(1-dimming)))  # lower intensity
@@ -92,7 +105,7 @@ class MusicDisplay:
         self.display.SetImage(self.coverart.convert('RGB'))
 
     
-    def add_text_to_overlay(self, text, location, fill=(255,255,255,255), clear=False, center=True):        
+    def add_text_to_overlay(self, text, location, fill=(255,255,255,255), clear=False, center=True):      
         draw = ImageDraw.Draw(self.overlay)
         if clear: 
             draw.rectangle((0,0,self.width, self.height), fill=(0,0,0,0))
@@ -110,8 +123,39 @@ class MusicDisplay:
             
 
     def add_overlay_to_display(self, dimming):
+        '''Add overlay to coverart image. 
+        
+        For displaying custom overlay items (e.g. text). Has bulk dimming parameter.
+        for darkening the background image.'''
         composite = self.coverart.copy()  # make a copy of the coverart
         composite = Image.eval(composite, (lambda pix: pix*(1-dimming)))  # lower intensity
+        composite.paste(self.overlay, (0,0), self.overlay)  # add overlay on top of coverart
+        self.display.SetImage(composite)
+
+    def add_overlay_to_display_falloff(self, dimming, offset, length, top=True):
+        '''Add overlay to coverart image. 
+        
+        For displaying custom overlay items (e.g. text). Has graduated (linear) falloff
+        of intensity. Bigger `length` means a shallower gradient.'''
+        gradient = Image.new('RGBA', (self.width, self.height))
+        for i in range(self.height):
+            # if top=False, we put the gradient from the bottom towards top.
+            i_coord = i if top else self.height-i
+            if i < offset:
+                for j in range (self.width):
+                    gradient.putpixel((j,i_coord), (0,0,0,int(255*dimming)))
+            else:
+                intensity = int(dimming*255*(1-(i-offset)/length))
+                if intensity > 0:
+                    for j in range (self.width):
+                        gradient.putpixel((j,i_coord), (0,0,0,intensity))
+                else: 
+                    # opacity < 0, no more need to compute any further iterations
+                    break        
+        
+        composite = self.coverart.copy()  # make a copy of the coverart
+        # exponential falloff (from top of image) with decay exponent
+        composite.paste(gradient, (0,0), gradient)  # add overlay on top of coverart
         composite.paste(self.overlay, (0,0), self.overlay)  # add overlay on top of coverart
         self.display.SetImage(composite)
 

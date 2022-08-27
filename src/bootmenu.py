@@ -1,4 +1,3 @@
-from curses import flash
 import socket
 import time
 import math

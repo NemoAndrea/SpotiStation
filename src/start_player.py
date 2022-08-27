@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-from dis import dis
-from linecache import cache
+from copyreg import constructor
 import os
 import time
 
@@ -164,11 +163,6 @@ def start_player(force_local_playback=False, force_playlists=False):
                 enable_locked_mode(player, sp, config)
                 continue
 
-            # # check if overlay should be removed
-            
-            # if disp_timer.overlay_expired() and display.overlay != None:
-            #     display.set_display_mode("")  # reset the overlay
-
             # adjust volume
 
             slider_volume = int(player.volumeslider.position()*100)
@@ -183,23 +177,39 @@ def start_player(force_local_playback=False, force_playlists=False):
 
                 # this is only in case we pause spotify on another device (e.g. phone) - this avoids 
                 # the display pause/play state getting out of sync
-                if sp.current_playback()["is_playing"]: player.display.set_display_mode("")
-                else: player.display.set_display_mode("paused")
+                if sp.current_playback()["is_playing"] and player.display.overlay_mode=="paused":
+                    player.display.set_display_mode("")  # clear the erroneous pause overlay
+                if (not sp.current_playback()["is_playing"]) and player.display.overlay_mode==None:
+                    player.display.set_display_mode("paused")  # add pause overlay that is missing
 
                 # check if the song has changed (by 'item' id)
                 if current_playback["item"]["id"] != latest_playback["item"]['id']:
                     current_playback = latest_playback  # update current playback for next loop
                     print_song_info(current_playback)
-                    player.display.set_coverart(current_playback)              
+                    player.display.set_coverart(current_playback) 
 
-                last_poll_time = time.time()
+                    # set a temporary text overlay showing album name 
+                    song_name = current_playback['item']['name']
+                    # we will need to trim the song name for the 64x64 display
+                    song_name_trim = song_name[:13] + ".." if len(song_name) > 15 else song_name                     
+                    player.display.add_text_to_overlay(song_name_trim, (32, 5),
+                        fill=(255,255,255,200), clear=True)  
+                    player.display.add_overlay_to_display_falloff(dimming=0.85, offset=9, length=32)  
+                    player.display.timer.start_timer(3)  # show name for 3 seconds                
 
-                # check if we should enable QUIET mode. Don't need to do this often, so we 
+                last_poll_time = time.time()  # reset poll time
+
+                # check if we should enter QUIET mode. Don't need to do this often, so we 
                 # put it within this check since it only happens every poll_period
                 if quiet_mode_active(config):
                     print("Leaving the ACTIVE state for QUIET state.")
                     enable_quiet_mode(player, sp, config)  # start quiet mode
                     continue
+
+            # check if overlay should be removed
+            if player.display.timer.is_expired():
+                print("Removing timed overlay")
+                player.display.reset_overlay() 
 
             time.sleep(0.05)  # minimum time between ACTIVE loops
 
