@@ -3,6 +3,8 @@ cache_directory/
 .cache*
 .creds
 
+*.xlsx
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
