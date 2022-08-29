@@ -1,8 +1,6 @@
-# Software Setup
+# Software Setup 
 
 ### 🚧 IN NEED OF REVIEW: this setup guide is currently purely functional, it needs to be rewritten for new users.
-
-
 
 We are assuming the code is run from a raspberry pi running `Raspberry Pi OS Lite` and that the raspberry pi has some way to connect to Wi-Fi. Bluetooth connectivity is required if speakers are to be driven wirelessly (as opposed to via 3.5mm jack of the Pi).
 
@@ -236,8 +234,8 @@ Type=simple
 Restart=on-failure
 RestartSec=15s
  
-WorkingDirectory=/home/musicpi/minimal-music-player
-ExecStart=/usr/bin/sudo -E /usr/bin/python /home/musicpi/minimal-music-player/src/start_player.py
+WorkingDirectory=/home/musicpi/SpotiStation
+ExecStart=/usr/bin/sudo -E /usr/bin/python /home/musicpi/SpotiStation/src/start_player.py
 
 [Install]  
 WantedBy=default.target

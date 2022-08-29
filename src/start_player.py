@@ -16,9 +16,9 @@ from bootmenu import query_boot_mode
 from config_manager import update_playlists, get_playlists_in_config, get_device_config, write_device_config
 from utils import print_song_info, has_internet_connection, has_bluetooth_connection
 from quiet_mode import quiet_mode_active, enable_quiet_mode, enable_locked_mode, quiet_mode_enabled_since, set_display_quiet_mode
-''''Raspberry pi music player'''
+'''Raspberry pi music player'''
 def start_player(force_local_playback=False, force_playlists=False):
-    print("Starting music player...")
+    print("Starting SpotiStation...")
 
     ### Hardware setup - create a new MusicPlayer object  
 
