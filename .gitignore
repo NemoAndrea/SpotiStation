@@ -4,6 +4,8 @@ cache_directory/
 .creds
 
 *.xlsx
+*guide.blend
+*.blend1
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

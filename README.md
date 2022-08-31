@@ -18,7 +18,7 @@ Features
 * Only one plug (power supply)
 * Configurable playlist selection, only use a subset of your Spotify playlist for playback
 * Playback controllable via Spotify API (e.g. via phone or computer)
-* Total parts cost 186 euro (**excluding printed parts**).
+* Total parts cost 206 euro (**excluding printed parts**).
 * 3D printed enclosure, making modification easy
 * Open python code, low barrier to modification
 
