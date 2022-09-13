@@ -4,26 +4,26 @@
 
 To build the SpotiStation, you will need to purchase the following items (or find alternatives).
 
-| Vendor   | Item                                                                            | Amount | vendor ID            | cost, total (eur) |
-|----------|---------------------------------------------------------------------------------|--------|----------------------|-------------------|
-| Digi-key | Raspberry Pi 3*                                                                 | 1      | 2648-RASPBERRYPI3-ND | 35                |
-| Adafruit | 64x64 RGB LED Matrix - 2.5mm Pitch                                              | 1      | 3649                 | 53                |
-| Adafruit | RGB Matrix Bonnet                                                               | 1      | 3211                 | 15                |
-| Adafruit | Black LED Diffusion Acrylic Panel 12" x 12"                                     | 1      | 4594                 | 9.6               |
-| Adafruit | NeoKey Socket Breakout for Mechanical Key Switches with NeoPixel                | 5      | 4978                 | 8.4               |
-| Adafruit | Adafruit NeoSlider I2C QT Slide Potentiometer                                   | 1      | 5295                 | 9.6               |
-| Adafruit | 5V 10A switching power supply                                                   | 1      | 658                  | 28.8              |
-| Adafruit | Relegendable Plastic Keycaps for MX Compatible Switches 10 pack                 | 1      | 5039                 | 4.76              |
-| Adafruit | Bluetooth 4.0 USB Module (v2.1 Back-Compatible)                                 | 1      | 1327                 | 12                |
-| Adafruit | Any MX-style keyswitch, ideally with heavy spring                               | 5      | 5124                 | 5                 |
-| Adafruit | Black Nylon Machine Screw and Stand-off Set – M2.5 Thread                       | 1      | 3299                 | 17                |
-| Adafruit | STEMMA QT / Qwiic JST SH 4-pin Cable with Premium Female Sockets - 150mm   Long | 1      | 4397                 | 1                 |
-| Adafruit | 2.54mm 0.1" Pitch 12-pin Jumper Cable - 20cm long                               | 1      | 4942                 | 2                 |
-| Adafruit | Break-away 0.1" 36-pin strip right-angle male header (10 pack)                  | 1      | 1540                 | 5                 |
+| Vendor   | Item                                                         | Amount | vendor ID      | cost, total (eur) |
+| -------- | ------------------------------------------------------------ | ------ | -------------- | ----------------- |
+| Digi-key | Raspberry Pi Zero 2                                          | 1      | 2648-SC0510-ND | 15                |
+| Adafruit | 64x64 RGB LED Matrix - 2.5mm Pitch                           | 1      | 3649           | 53                |
+| Adafruit | RGB Matrix Bonnet                                            | 1      | 3211           | 15                |
+| Adafruit | Black LED Diffusion Acrylic Panel 12" x 12"                  | 1      | 4594           | 9.6               |
+| Adafruit | NeoKey Socket Breakout for Mechanical Key Switches with NeoPixel | 5      | 4978           | 8.4               |
+| Adafruit | Adafruit NeoSlider I2C QT Slide Potentiometer                | 1      | 5295           | 9.6               |
+| Adafruit | 5V 10A switching power supply                                | 1      | 658            | 28.8              |
+| Adafruit | Relegendable Plastic Keycaps for MX Compatible Switches 10 pack | 1      | 5039           | 4.76              |
+| Adafruit | Any MX-style keyswitch, ideally with heavy spring            | 5      | 5124           | 5                 |
+| Adafruit | Black Nylon Machine Screw and Stand-off Set – M2.5 Thread    | 1      | 3299           | 17                |
+| Adafruit | STEMMA QT / Qwiic JST SH 4-pin Cable with Premium Female Sockets - 150mm   Long | 1      | 4397           | 1                 |
+| Adafruit | 2.54mm 0.1" Pitch 12-pin Jumper Cable - 20cm long            | 1      | 4942           | 2                 |
+| Adafruit | Break-away 0.1" 36-pin strip right-angle male header (10 pack) | 1      | 1540           | 5                 |
 
-Total: **206 Euro**
 
-*The hardware has been tested with a Raspberry Pi 3, but any newer version should also work fine. I suspect a Raspberry Pi Zero 2W might also work.
+Total: **174 Euro**
+
+*Full-size Raspberry Pi's will also work as long as they are version 3 or newer. For version 3 you may need a USB Bluetooth adapter.
 
 **you can get any variety (clicky, tactile or linear), but in my opinion a linear is most appropriate, and especially for the main play/pause button it would be good to have a switch that has a heavy spring (force).
 
@@ -46,7 +46,7 @@ To assemble your own SpotiStation, you will need
 
 ### 🖨️ 3D printing
 
-There are 4 large parts that need to be printed, and 3 smaller ones. I suggest you pick two different colours to print with for visual interest, but can pick whatever colour you like of course.
+There are 4 large parts that need to be printed, and 3 smaller ones. I suggest you pick two different colours to print with for visual interest, but can pick whatever colour you like of course. ⚠️ **Note that there are two versions of the baseplate part: one for the Raspberry Pi zero format, and one for the normal full size Raspberry Pi.**
 
 ![3d printable parts laid out](../media/3D_printing_parts.JPG)
 
