@@ -51,7 +51,7 @@ def display_config_menu(player, duration=30):
     someone accidentally opened the menu and is not sure what to do.'''
     initial_time = time.time()  
     current_item_index = 0  # current item in list that is selected
-    options = ["-- exit --", "playlists", "ip adress"]  #TODO: bluetooth connection menu?
+    options = ["-- exit --", "manual", "playlists", "ip adress"]  #TODO: bluetooth connection menu?
     
     # wait for button press until 'duration' has passed. If loop expires, then None is returned
     while time.time()-initial_time < duration:
@@ -74,8 +74,9 @@ def display_config_menu(player, duration=30):
         # the playpause button serves as the 'select' key, so when that is pressed we choose that option 
         if player.playpause.got_pressed(): 
             if current_item_index == 0: return  # exit menu, just return without doing anything
-            elif current_item_index == 1: select_playlists_on_display(player); return
-            elif current_item_index == 2: display_ip_info(player); return
+            elif current_item_index == 1: show_manual_qr_code(player); return
+            elif current_item_index == 2: select_playlists_on_display(player); return
+            elif current_item_index == 3: display_ip_info(player); return
             # add more options here
         
         if player.sidebutton_2.got_pressed():
@@ -88,6 +89,19 @@ def display_config_menu(player, duration=30):
 
         time.sleep(0.02)
     return
+
+def show_manual_qr_code(player):
+    '''Show a scannable QR code linking to the project wiki (i.e. device manual)'''
+    player.display.set_image_from_file("./media/interface/manual_qr.png")
+    player.display.add_text_to_overlay("scan QR code", (32, 6), fill=(255,255,255,200), clear=True)
+    player.display.add_text_to_overlay("for manual", (32, 57), fill=(255,255,255,200), clear=False)    
+    player.display.add_overlay_to_display(dimming=0) 
+
+    # wait until ok button is pressed
+    while not player.playpause.got_pressed():
+        time.sleep(0.03)
+
+    return  # leave the menu and boot
 
 
 def display_ip_info(player):
