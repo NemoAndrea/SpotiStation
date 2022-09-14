@@ -162,7 +162,7 @@ def start_player(force_local_playback=False, force_playlists=False):
                 time.sleep(1)  # ensure the overlay is visible
 
             # Handle device getting LOCKED by administrator or user
-            elif config['settings']['lock-mode-enabled'] and player.backbutton_1.got_pressed():
+            elif config.getboolean('settings', 'lock-mode-enabled') and player.backbutton_1.got_pressed():
                 print(f"Leaving the ACTIVE state for LOCKED state.")
                 enable_locked_mode(player, sp, config)
                 continue

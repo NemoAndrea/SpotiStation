@@ -2,7 +2,7 @@ from datetime import datetime
 from setup_hardware import PlayerState
 
 def quiet_mode_active(config):
-    if config['settings']['night-mode-enabled']:
+    if config.getboolean('settings', 'night-mode-enabled'):
         current_time = datetime.now()
         # parse the config times. This will give objects with year = 1900
         starttime_raw = datetime.strptime(config['settings']['night-mode-time-start'], "%H:%M")
