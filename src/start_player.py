@@ -231,8 +231,8 @@ def start_player(force_local_playback=False, force_playlists=False):
                 # check for button presses, and temporarily light up display if press detected
                 if player.any_button_got_pressed():                    
                     print("temporarily showing display in QUIET mode")
-                    player.display.timer.start_timer(7)  # show display for 7 seconds 
                     set_display_quiet_mode(player, config)  
+                    player.display.timer.start_timer(7)  # show display for 7 seconds                     
 
                 # if the display timer is active we show the display again, otherwise we turn it off
                 if player.display.timer.is_expired():  

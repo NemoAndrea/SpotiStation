@@ -21,6 +21,8 @@ def quiet_mode_enabled_since(config, time_since=30):
     current_time = datetime.now()
     # parse the config times. This will give objects with year = 1900
     starttime_raw = datetime.strptime(config['settings']['night-mode-time-start'], "%H:%M")
+    endtime_raw = datetime.strptime(config['settings']['night-mode-time-end'], "%H:%M")
+    endtime = datetime.now().replace(hour = endtime_raw.hour, minute = endtime_raw.minute)
     offset_minutes = time_since % 60
     offset_hours = time_since // 60
     offset_time = datetime.now().replace(
@@ -28,8 +30,11 @@ def quiet_mode_enabled_since(config, time_since=30):
         minute = starttime_raw.minute + offset_minutes
     )
 
-    if current_time > offset_time:       
-        return True   # return True to inform that we should in QUIET mode
+    # check if time_since minutes have passed since QUIET mode started
+    # or if current time is before the end time (e.g 01:20 < 9:00)
+    # TODO make this more robust (drop assumption that start time is <23:59 and end time in morning)
+    if current_time > offset_time or current_time < endtime:       
+        return True   # we have in in quiet mode for time_since minutes or more
     else:
         return False
 
