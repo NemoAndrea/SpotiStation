@@ -1,8 +1,6 @@
 <img src="media/player_render.JPG" width="800">
 
 # SpotiStation - an accessible music player
-> 🚧 **Note: this project is still under construction and is getting major work in documentation and minor software tweaks before it is suitable for general replication.**
-
 A **Raspberry Pi** powered **Spotify** music player that aims to be **easy to use for people with cognitive or physical disabilities (e.g. Alzheimer's or MS)**, and allow them to enjoy music independently. 
 
 To suit this purpose, the music player has an **extremely simple interface & operation**. A big play/pause button, a physical linear volume slider, and two side buttons that handle convenience functions, but can be omitted.
@@ -12,7 +10,7 @@ While accessibility is the primary aim of the design, this does not mean it cann
 Features
 
 * RGB led matrix that displays cover art and serves as basic visual interface
-* Night mode that turns off the display and stops playback at scheduled interface
+* Night mode that turns off the display and stops playback at user-set interval
 * Lock mode, for caretakers to stop playback for a day
 * Audio playback via Bluetooth simplifies wiring and mounting
 * Only one plug (power supply)
@@ -24,7 +22,7 @@ Features
 
 ### 📖 Manual
 
-A detailed usage manual explaining features and going into details about how features are implemented can be found on the project wiki. (warning: 🚧 under construction 🚧)
+A usage manual explaining features and going into details about how features are implemented can be found [on the project wiki](https://github.com/NemoAndrea/SpotiStation/wiki).
 
 ### 🔨 Assembly
 
