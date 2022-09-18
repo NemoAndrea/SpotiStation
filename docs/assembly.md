@@ -43,6 +43,7 @@ To assemble your own SpotiStation, you will need
 * Small screwdriver to tighten down `M2.5`  screws
 * Medium/large screwdriver to tighten down `M4` and `M3` screws
 * Soldering iron and solder, to solder some headers onto components
+* Tools to cut acrylic panel (e.g. lasercutter or blade)
 
 ### 🖨️ 3D printing
 
@@ -77,7 +78,7 @@ On the opposite side, (the 'inside' of the `top-box`), place two hex nuts and ti
 
 ![display step 2](../media/assembly/display_step_2.JPG)
 
-Cut the `display diffuser` panel to the correct size (e.g. with a lasercutter or knife) and place it in the corresponding groove in the `display-arm`.
+Cut the `display diffuser` panel (e.g. with a lasercutter or knife) to the correct size (**161 x 168mm**)  and place it in the corresponding groove in the `display-arm`. In the image below the panel is 168mm wide, and 161mm tall. ⚠️ **Make sure the matte side of the acrylic panel faces outward (towards the user).**
 
 ![display step 3 - diffuser](../media/assembly/display_step_3.JPG)
 
