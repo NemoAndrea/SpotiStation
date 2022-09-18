@@ -13,7 +13,7 @@ from read_cache_into_environment import get_spotipy_auth
 from setup_hardware import MusicPlayer, PlayerState
 from bootmenu import query_boot_mode
 from config_manager import update_playlists, get_playlists_in_config, get_device_config, write_device_config
-from utils import format_song_info, has_internet_connection, has_bluetooth_connection, setup_logger, get_new_playback
+from utils import format_song_info, has_internet_connection, has_bluetooth_connection, setup_logger, get_new_playback, trim_song_name
 from quiet_mode import quiet_mode_active, enable_quiet_mode, enable_locked_mode, quiet_mode_enabled_since, set_display_quiet_mode
 
 
@@ -131,10 +131,15 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
         while True:
             if player.state == PlayerState.ACTIVE:
                 if player.playpause.got_pressed():
-                    if get_new_playback(sp, current_playback)["is_playing"]:  # get current playback status (play/pause)
+                    playback = get_new_playback(sp, current_playback)
+                    if playback["is_playing"]:  # get current playback status (play/pause)
                         logger.info("pausing playback")
                         sp.pause_playback()
                         player.display.set_display_mode("paused")
+                        # also show the song name at the top of display when track is paused
+                        player.display.add_text_to_overlay(trim_song_name(playback), (32, 5),
+                            fill=(255,255,255,200), clear=False)  
+                        player.display.add_overlay_to_display(dimming=0.9)
                     else:
                         sp.start_playback()
                         logger.info("starting/resuming playback")
@@ -197,11 +202,8 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
                         logger.info(format_song_info(current_playback))
                         player.display.set_coverart(current_playback) 
 
-                        # set a temporary text overlay showing album name 
-                        song_name = current_playback['item']['name']
-                        # we will need to trim the song name for the 64x64 display
-                        song_name_trim = song_name[:13] + ".." if len(song_name) > 15 else song_name                     
-                        player.display.add_text_to_overlay(song_name_trim, (32, 5),
+                        # set a temporary text overlay showing album name                                             
+                        player.display.add_text_to_overlay(trim_song_name(current_playback), (32, 5),
                             fill=(255,255,255,200), clear=True)  
                         player.display.add_overlay_to_display_falloff(dimming=0.85, offset=9, length=32)  
                         player.display.timer.start_timer(3)  # show name for 3 seconds                

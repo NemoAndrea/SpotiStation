@@ -31,6 +31,12 @@ def format_song_info(spotipy_item):
     return f">> Current song is '{spotipy_item['item']['name']}' by {spotipy_item['item']['artists'][0]['name']}"
 
 
+def trim_song_name(current_playback):
+    '''Trim the song name to a length that can be displayed on the 64x64 panel'''
+    song_name = current_playback['item']['name']
+    return song_name[:13] + ".." if len(song_name) > 15 else song_name 
+
+
 def setup_logger(mode):
     '''Configures logging to use a TimedRotatingFileHandler that creates a new file at midnight'''
     # set TimedRotatingFileHandler for root
