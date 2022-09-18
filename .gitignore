@@ -2,6 +2,8 @@
 cache_directory/
 .cache*
 .creds
+*.log.*
+*.log
 
 *.xlsx
 *guide.blend

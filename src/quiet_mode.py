@@ -1,5 +1,6 @@
 from datetime import datetime
 from setup_hardware import PlayerState
+import logging
 
 def quiet_mode_active(config):
     if config.getboolean('settings', 'night-mode-enabled'):
@@ -40,7 +41,7 @@ def quiet_mode_enabled_since(config, time_since=30):
 
 
 def enable_quiet_mode(player, spotipy, config):
-    print("Entering QUIET mode; pausing music and turning volume to 0")
+    logging.getLogger().info("Entering QUIET mode; pausing music and turning volume to 0")
     spotipy.pause_playback()  # pause the music via API (but could be turned back on via phone)
     set_display_quiet_mode(player, config)
     player.state = PlayerState.QUIET
@@ -54,7 +55,7 @@ def set_display_quiet_mode(player, config):
 
 
 def enable_locked_mode(player, spotipy, config):
-    print("Entering LOCKED mode; pausing music and turning volume to 0 until the next QUIET mode")
+    logging.getLogger().info("Entering LOCKED mode; pausing music and turning volume to 0 until the next QUIET mode")
     spotipy.pause_playback()  # pause the music via API (but could be turned back on via phone)
     player.display.set_display_mode("lock_mode") 
     player.display.add_text_to_overlay(f"until {config['settings']['night-mode-time-start']}",

@@ -3,6 +3,7 @@ import time
 import math
 from config_manager import get_playlists_in_config_as_sorted_list, write_playlist_config
 import configparser
+import logging
 
 
 ''''Boot mode selection
@@ -15,17 +16,18 @@ device, but for quick on the go or for less tech savy users these menus can be u
 
 def query_boot_mode(player, duration=5):
     '''Main loop that allows for boot mode selection'''
-    print(f">> Waiting for boot mode selection - limit={duration} sec")
+    logger = logging.getLogger()
+    logger.info(f">> Waiting for boot mode selection - limit={duration} sec")
     initial_time = time.time()  
     seconds_since_start = -1
     
     # wait for button press until 'duration' has passed. If loop expires, then None is returned
     while time.time()-initial_time < duration:
         if any([player.playpause.got_pressed(), player.sidebutton_1.got_pressed(),player.sidebutton_2.got_pressed()]):
-            print("> Skipped boot menu, launching application as normal")
+            logger.info("> Skipped boot menu")
             break
         elif any((player.backbutton_1.got_pressed(), player.backbutton_2.got_pressed())):
-            print("> Launching Configuration Menu")
+            logger.info("> Launching Configuration Menu")
             display_config_menu(player); break 
         # update the text on display once per second
         if seconds_since_start != math.floor(time.time()-initial_time):
@@ -37,7 +39,7 @@ def query_boot_mode(player, duration=5):
             player.display.add_overlay_to_display(dimming=0.5)
         time.sleep(0.01)
 
-    print("> Leaving Boot Menu, launching application as normal")
+    logger.info("> Leaving Boot Menu, launching application as normal")
     player.display.add_text_to_overlay(f"starting...", (32, 60), fill=(255,255,255,200), clear=True)  
     player.display.add_overlay_to_display(dimming=0.7)
     time.sleep(0.5)
@@ -92,6 +94,10 @@ def display_config_menu(player, duration=30):
 
 def show_manual_qr_code(player):
     '''Show a scannable QR code linking to the project wiki (i.e. device manual)'''
+
+    logger = logging.getLogger()
+    logger.info("Showing SpotiPlayer manual QR code")
+
     player.display.set_image_from_file("./media/interface/manual_qr.png")
     player.display.add_text_to_overlay("scan QR code", (32, 6), fill=(255,255,255,200), clear=True)
     player.display.add_text_to_overlay("for manual", (32, 57), fill=(255,255,255,200), clear=False)    
@@ -109,9 +115,14 @@ def display_ip_info(player):
     
     Show the local IP adress on screen. In case you need to connect to the device via SSH but do
     not use a fixed IP adress. Playpause button will exit the menu and start the player.'''
+
+    logger = logging.getLogger()
+    logger.info("Showing SpotiPlayer IP address")
+
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
-    print(f"IP Address of {socket.gethostname()}: {s.getsockname()[0]}")
+    
+    logger.info(f"IP Address of {socket.gethostname()}: {s.getsockname()[0]}")
     player.display.set_image_from_file("./media/interface/ip_screen.png")
     player.display.add_text_to_overlay(str(s.getsockname()[0]), (32, 50),
      fill=(255,255,255,200), clear=True)  
@@ -131,6 +142,10 @@ def select_playlists_on_display(player):
     while 'gray' playlists are ignored. Use side buttons for up-down navigation and playpause button
     to toggle the state of the playlist. Use the 'save' option (top of the list) to save config and
     start the player.'''
+
+    logger = logging.getLogger()
+    logger.info("Configuring playlist states...")
+
     display_limit = 8  # how many items for on one screen
     playlists = get_playlists_in_config_as_sorted_list()
     playlists.insert(0, ["-- save --", False])
@@ -180,6 +195,7 @@ def select_playlists_on_display(player):
                 
         if player.playpause.got_pressed():
             if cursor_position == 0:  # save and exit option
+                logger.info("Saving playlist state config.")
                 # get the old config
                 config = configparser.ConfigParser(allow_no_value=True)
                 config.read("config/playlists.ini")
@@ -190,7 +206,7 @@ def select_playlists_on_display(player):
                 for new_playlist, _ in in_rotation:
                     if new_playlist not in [key for key in config["in rotation"]]:
                         # swap to in_rotation
-                        print(f"[config change] (new in-rotation): {new_playlist}")
+                        logger.info(f"[config change] (new in-rotation): {new_playlist}")
                         # we get the uri from the old section (which is the 'ignored' section)
                         uri = config.get("ignored", new_playlist)
                         config.remove_option("ignored", new_playlist)
@@ -198,7 +214,7 @@ def select_playlists_on_display(player):
                 for new_playlist, _ in ignored:
                     if new_playlist not in [key for key in config["ignored"]]:
                         # swap to ignored
-                        print(f"[config change] (new ignored): {new_playlist}")
+                        logger.info(f"[config change] (new ignored): {new_playlist}")
                         # we get the uri from the old section (which is the 'in rotation' section)
                         uri = config.get("in rotation", new_playlist)
                         config.remove_option("in rotation", new_playlist)
@@ -208,6 +224,7 @@ def select_playlists_on_display(player):
                 return
             else:  
                 # we are toggling the state of the playlist 'ignored'<->'in rotation'
+                logger.debug(f"changing the state of {playlists[cursor_position][0]} to {not playlists[cursor_position][1]} (unsaved)")
                 playlists[cursor_position][1] = not playlists[cursor_position][1]
         
         time.sleep(0.02)

@@ -5,6 +5,7 @@ from io import BytesIO
 from datetime import datetime, timedelta
 import math
 import os  # needed to drop root privs
+import logging
 
 sys.path.append('/home/musicpi/rpi-rgb-led-matrix/bindings/python/rgbmatrix')
 from rgbmatrix import RGBMatrix, RGBMatrixOptions
@@ -33,7 +34,7 @@ class MusicDisplay:
         options.hardware_mapping = 'adafruit-hat-pwm'
         # https://github.com/hzeller/rpi-rgb-led-matrix#panel-arrangement
         options.pixel_mapper_config = 'Rotate:270'  
-        options.brightness = 35  # in percent
+        options.brightness = 50  # in percent
         options.limit_refresh_rate_hz  = 60 
         # We disable the feature that automatically drops root privs (as it sets uid=1)
         # which means all your python imports get borked. We MANUALLY set it back to 1000
@@ -43,8 +44,9 @@ class MusicDisplay:
         self.display = RGBMatrix(options = options)
         os.setuid(1000)  # set to default user (which we assume is at uid 1000, default for raspbberry pi os)
         
-    def set_coverart(self, spotipy_item):
+    def set_coverart(self, spotipy_item):        
         url = spotipy_item['item']['album']["images"][0]["url"]
+        logging.getLogger().debug(f"[display] setting coverart url: {url}")
         response = requests.get(url)
         image = Image.open(BytesIO(response.content))
         image.thumbnail((self.width, self.height), Image.ANTIALIAS)
@@ -58,6 +60,9 @@ class MusicDisplay:
         
         Load an image on disk as overlay. Meant for important overlays. Will reset any active 
         timers on the display.'''
+
+        logging.getLogger().debug(f"[display] setting inferface image: {mode}")
+
         # reset timer (no situation where you set a timer, add a display overlay and STILL want to keep overlay)
         self.timer.reset_timer()  
         # load overlay image
@@ -85,6 +90,7 @@ class MusicDisplay:
 
     def reset_overlay(self):
         '''Remove any overlay from display, and show only coverart'''
+        logging.getLogger().debug(f"[display] reset overlay")
         self.overlay = Image.new('RGBA', (self.width, self.height))  # reset overlay
         self.add_overlay_to_display(dimming=0)  # without overlay this just draws self.coverart
 
@@ -101,11 +107,13 @@ class MusicDisplay:
 
     # simple display image from file function for e.g. splash screen	
     def set_image_from_file(self, path):
+        logging.getLogger().debug(f"[display] setting image from path: {path}")
         self.coverart = Image.open(path) 
         self.display.SetImage(self.coverart.convert('RGB'))
 
     
-    def add_text_to_overlay(self, text, location, fill=(255,255,255,255), clear=False, center=True):      
+    def add_text_to_overlay(self, text, location, fill=(255,255,255,255), clear=False, center=True):     
+        logging.getLogger().debug(f"[display] add text '{text}' to overlay at location {location}") 
         draw = ImageDraw.Draw(self.overlay)
         if clear: 
             draw.rectangle((0,0,self.width, self.height), fill=(0,0,0,0))

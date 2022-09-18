@@ -1,5 +1,6 @@
 import configparser
 import re
+import logging
 
 def get_device_config():
     config = configparser.ConfigParser(allow_no_value=True)
@@ -40,7 +41,8 @@ def update_playlists(playlists):
 
     write_playlist_config(config)
 
-    print(f"Playlist Configuration: There are {status['active']} active playlists with "
+    logger = logging.getLogger()
+    logger.info(f"Playlist Configuration: There are {status['active']} active playlists with "
           f"{status['ignored']} playlists being ignored. There were {status['newly_added']} new "
           f"playlist found and added to the 'ignored' section")
 
