@@ -205,8 +205,9 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
                         # set a temporary text overlay showing album name                                             
                         player.display.add_text_to_overlay(trim_song_name(current_playback), (32, 5),
                             fill=(255,255,255,200), clear=True)  
-                        player.display.add_overlay_to_display_falloff(dimming=0.85, offset=9, length=32)  
-                        player.display.timer.start_timer(3)  # show name for 3 seconds                
+                        player.display.add_overlay_to_display_falloff(dimming=0.85, offset=9, length=32) 
+                        if config.getboolean('settings', 'fade-song-name'): 
+                            player.display.timer.start_timer(3)  # show name for 3 seconds only              
 
                     last_poll_time = time.time()  # reset poll time
 
@@ -260,6 +261,8 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
 
                 player.mute(audio) 
                 time.sleep(0.3)  # in LOCKED mode we don't need to loop fast          
+    except KeyboardInterrupt as e:
+        logger.warning("SpotiStation interrupted via KeyboardInterrupt")
     except:
         logger.exception("Unhandled exception in SpotiStation playback", stack_info=True)
 
