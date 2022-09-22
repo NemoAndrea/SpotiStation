@@ -60,5 +60,7 @@ This project is building on similar projects that use the RGB matrix to show alb
 * The [spotipi project](https://github.com/ryanwa18/spotipi)  by Ryan Ward
 * The [thirtytwopixels project](https://github.com/fspoettel/thirtytwopixels) by Felix Spöttel 
 
+This project was significantly improved by insights gained during the [Delft Open Hardware Academy](https://www.openhardware.academy/01_Welcome.html). 
+
 
 
