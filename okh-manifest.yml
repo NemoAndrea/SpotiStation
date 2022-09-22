@@ -1,0 +1,32 @@
+title: SpotiStation
+description: Spotify-enabled music player built around a raspberry pi and rgb matrix
+  display. Streams and controls playback as an independent device and uses RGB
+  matrix display as interface.
+intended-use: The design is focussed on being accessible to people with physical and
+  cognitive disabilities by use of few and large buttons and simple UI. It
+  should allow anyone to enjoy music without supervision.
+keywords:
+  - spotify
+  - 3D-printing
+  - raspberry-pi
+  - accessibility
+  - music
+project-link: https://github.com/NemoAndrea/SpotiStation
+image: https://raw.githubusercontent.com/NemoAndrea/SpotiStation/main/media/player_render.JPG
+made: true
+made-independently: false
+license:
+  hardware: GPL-3.0-only
+licensor:
+  name: Nemo Andrea
+  email: nemoandrea@outlook.com
+okh-manifest-version: 1.0.0
+date-created: 2022-09-23
+date-updated: 2022-09-22
+manifest-author:
+  name: Nemo Andrea
+  email: nemoandrea@outlook.com
+contact:
+  social:
+    - platform: twitter
+      user-handle: cursed_tubule
