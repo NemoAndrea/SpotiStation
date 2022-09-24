@@ -20,6 +20,10 @@ Features
 * 3D printed enclosure, making modification easy
 * Open python code, low barrier to modification
 
+> **Note** SpotiStation does **not** have any built-in speakers, it needs external bluetooth speakers.
+
+> **Note** SpotiStation is a **standalone** Spotify player and does **not** require a computer or mobile device to run or handle any aspect of playback, although these devices integrate well with the device thanks to the Spotify multi-device API.
+
 ### 📖 Manual
 
 A usage manual explaining features and going into details about how features are implemented can be found [on the project wiki](https://github.com/NemoAndrea/SpotiStation/wiki).
