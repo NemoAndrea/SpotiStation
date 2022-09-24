@@ -26,7 +26,7 @@ A usage manual explaining features and going into details about how features are
 
 ### 🔨 Assembly
 
-![xray view of spotistation](media/xray-player-demo.mp4)
+![xray view of spotistation](media/xray-player.gif)
 
 The assembly of the music player will require some dexterity, screwdrivers, and soldering setup and know-how. If you don't have a soldering setup, you could ask a friend or look for a [maker space](https://en.wikipedia.org/wiki/Hackerspace) that will have the right gear.
 
