@@ -51,6 +51,8 @@ There are 4 large parts that need to be printed, and 3 smaller ones. I suggest y
 
 ![3d printable parts laid out](../media/3D_printing_parts.JPG)
 
+![xray view of spotistation](../media/xray-player.gif)
+
 All parts can be printed without supports on an FDM printer, and all parts fit* on the buildplate of small 3D printers such as a `Prusa Mini+`. Print them as oriented in the `.stl`
 
 The `case-top.stl` file *can* be printed without supports, but it is probably best to add some supports as depicted below.
