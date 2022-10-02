@@ -79,7 +79,7 @@ backend = "alsa"
 mixer = "PCM"
 volume-controller = "alsa" # or alsa_linear, or softvol
 #onevent = command_run_on_playback_event
-device_name = "name_in_spotify_connect"
+device_name = "SpotiStation"
 bitrate = 96|160|320
 cache_path = "cache_directory"
 volume-normalisation = true
@@ -92,7 +92,6 @@ Where of course the following items have to be changed to your own credentials/r
 * password
 * bitrate (choose 320)
 
-* device name (I suggest `Music_Pi`. *do not use spaces in the name*)
 * (optional) device - uncomment this line (remove `#`) and set a device if you want to select a specific output for audio (e.g. HDMI/Bluetooth)
 
 > If you use Facebook login for Spotify, you will need to go to Spotify's website and look at your account settings. You should be able to find a numerical username. This is the username you will want to use for `spotifyd`. As for the password, you will probably have to request a 'device password' somewhere in the account settings in Spotify. This takes less than 3 minutes.
@@ -147,9 +146,9 @@ pip3 install spotipy
 
 We need to get credentials for the api, which we can realise by making an 'app' in the [spotify developer bashboard](https://developer.spotify.com/dashboard/applications). Go to the dashboard, add  a new app, and from that new app get the `client id` and the `client secret` and `redirect url`.
 
-> Redirect url is best set to something local; I suggest `https://localhost:8888/spotipycode`. It doesn't matter. You will need to set this in the Spotify dashboard in your app under the app-specific settings.
+> Redirect url is best set to something local; I suggest `http://localhost:8888/callback`.  You will need to set this in the Spotify dashboard in your app under the app-specific settings.
 
-We will put these credentials in environment variables as one would not want to have this included in the repository.
+We will put these credentials in environment variables as one would not want to have this included in the repository. In the Raspberry Pi's terminal, fill out the following statements. 
 
 ```
 export SPOTIPY_CLIENT_ID='your-spotify-client-id'
@@ -157,7 +156,9 @@ export SPOTIPY_CLIENT_SECRET='your-spotify-client-secret'
 export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
 ```
 
-then run `test_spotipy.py` it will generate a .cache file in the current directory.
+then run `test_spotipy.py` it will generate a .cache file in the current directory. If all is well, you will be shown a link. Paste that link in a browser where you are signed into Spotify. You will be asked to agree to some terms. Read the terms, agree and then you will be shown a blank/error page. **This is not a mistake!** The URL of the page will actually contain a code that you need to paste back into your terminal! Copy **the entire** url and paste it into the terminal as asked. 
+
+If that went well a `.creds` file should have been generated. Move it into the root folder of the repository (so out of `src`). 
 
 Now you can use 
 

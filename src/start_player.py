@@ -78,12 +78,12 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
     try:
         # Check that we can find the raspberry pi in playback devices (if spotifyd is working correctly)
         devices = sp.devices()["devices"]
-        assert any("Music_Pi" in device["name"] for device in devices), "Unable to find 'Music_Pi' in  \
+        assert any("SpotiStation" in device["name"] for device in devices), "Unable to find 'SpotiStation' in  \
             spotify playback devices. There is probably something wrong with spotifyd"
 
         # set the volume for the raspberry pi in spotify to 100%, we will do volume control on
         # device and want to guarantee that it cannot be turned up more than the base setting
-        sp.volume(100, next(filter(lambda device: device["name"]=="Music_Pi", devices))["id"])
+        sp.volume(100, next(filter(lambda device: device["name"]=="SpotiStation", devices))["id"])
 
         # when lanching the player, you may not want to switch to the local device for playback 
         # as you may want to listen on your phone or other set of speakers not controlled by raspberry
@@ -98,7 +98,7 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
             else:
                 logger.info(f"Switching from {current_device_name} to Raspberry Pi for playback")
             # find the raspberry pi in devices
-            current_device = next(filter(lambda device: device["name"]=="Music_Pi", devices))        
+            current_device = next(filter(lambda device: device["name"]=="SpotiStation", devices))        
             # and switch to it
             sp.transfer_playback(current_device["id"])    
 
