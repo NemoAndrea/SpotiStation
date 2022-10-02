@@ -53,14 +53,19 @@ def setup_logger(mode):
     logger.setLevel(mode)  # explicitly set the logger level
     # intialise a message (so we can track e.g. program restarts)
     logger.info('[NEW LOG START]')
-
     return logger
 
 
 def get_new_playback(spotipy, old_playback):
     '''Try to fetch the latest playback information from spotify API, but return old playback in case of timeout.'''
     try:
-        return spotipy.current_playback()
+        current_playback = spotipy.current_playback()
+        if current_playback is not None:
+            return current_playback
+        else:
+            # TODO handle manual restarting of playback
+            logging.getLogger().exception("[Spotify API] current playback status timed out, needs kickstart", stack_info=True)
+            raise Exception("Spotify API playback issue")
     except requests.exceptions.ReadTimeout:
         logging.getLogger.warning("error fetching current playback from spotify API", exc_info=True)
         # return the old playback info. Hopefully next iteration when this is called 

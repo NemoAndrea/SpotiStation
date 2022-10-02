@@ -110,9 +110,10 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
 
         # try to find out what we are playing/will be playing
         current_playback = sp.current_playback()  # we might already be playing something
-        if current_playback == None:  
+        if current_playback == None:  # nothing is playing (spotify has been idle for a long time)
             # we select a song to queue up from the 'in rotation' playlists
             sp.start_playback(current_device["id"], playlists[playlist_index][1])
+            sp.pause_playback()  # and pause it 
         elif force_playlists:  # we are already playing somethign (from e.g. phone) 
             # we check if the current song is in the playlists config, and otherwise switch to one
             # that is in the playlist config 'in rotation' section.
