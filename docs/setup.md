@@ -226,21 +226,21 @@ We make the contents of the file the following:
 ```
 [Unit]
 Description=A python spotify music player service
-Requisite=spotifyd.service 
+Requisite=spotifyd.service
 After=spotifyd.service
 
 [Service]
-Type=simple 
-Restart=on-failure
-RestartSec=15s
- 
-WorkingDirectory=/home/musicpi/SpotiStation
-ExecStart=/usr/bin/sudo -E /usr/bin/python /home/musicpi/SpotiStation/src/start_player.py
+Type=simple
+WorkingDirectory=/home/musicpi/minimal-music-player
+ExecStart=/usr/bin/sudo -E /usr/bin/python /home/musicpi/minimal-music-player/src/start_player.py
+Restart=always
+RestartSec=60
 
-[Install]  
+[Install]
 WantedBy=default.target
-
 ```
+
+> We set it such that it will restart automatically when the python script exits (which will only happen in case of an error)
 
 We make it active via: 
 
@@ -248,7 +248,7 @@ We make it active via:
  sudo chmod 644 ~/.config/systemd/user/rpi-spotiplayer.service
 ```
 
-And then we update our `systemctl` process by running `sudo systemctl --user daemon-reload`. As before, it is good to see if it works before making it run on startup by running `systemctl --user start rpi-spotiplayer.service`. That should start the player as normal after few seconds. 
+And then we update our `systemctl` process by running `sudo systemctl --user daemon-reload`. As before, it is good to see if it works before making it run on start-up by running `systemctl --user start rpi-spotiplayer.service`. That should start the player as normal after few seconds. 
 
 If that all seems to work well, stop the process and set it up for running at boot:
 
@@ -264,5 +264,8 @@ Nice to have, but not needed
 alias startplayer='systemctl --user start rpi-spotiplayer.service'
 alias stopplayer='systemctl --user stop rpi-spotiplayer.service'
 alias restartplayer='systemctl --user restart rpi-spotiplayer.service'
+# in case you want to manually start the player and observe the log in terminal via SSH
+# make sure the service is stopped and that you are in the repository directory
+alias startplayer_manual='sudo -E python ~/minimal-music-player/src/start_player.py'
 ```
 
