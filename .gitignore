@@ -8,6 +8,7 @@ cache_directory/
 *.xlsx
 *guide.blend
 *.blend1
+*.3mf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

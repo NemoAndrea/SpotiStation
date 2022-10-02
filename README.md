@@ -1,4 +1,4 @@
-<img src="media/player_render.JPG" width="800">
+![banner image](media/banner.png)
 
 # SpotiStation - an accessible music player
 A **Raspberry Pi** powered **Spotify** music player that aims to be **easy to use for people with cognitive or physical disabilities (e.g. Alzheimer's or MS)**, and allow them to enjoy music independently. 
@@ -20,11 +20,17 @@ Features
 * 3D printed enclosure, making modification easy
 * Open python code, low barrier to modification
 
+> **Note** SpotiStation does **not** have any built-in speakers, it needs external bluetooth speakers.
+
+> **Note** SpotiStation is a **standalone** Spotify player and does **not** require a computer or mobile device to run or handle any aspect of playback, although these devices integrate well with the device thanks to the Spotify multi-device API.
+
 ### 📖 Manual
 
 A usage manual explaining features and going into details about how features are implemented can be found [on the project wiki](https://github.com/NemoAndrea/SpotiStation/wiki).
 
 ### 🔨 Assembly
+
+![xray view of spotistation](media/xray-player.gif)
 
 The assembly of the music player will require some dexterity, screwdrivers, and soldering setup and know-how. If you don't have a soldering setup, you could ask a friend or look for a [maker space](https://en.wikipedia.org/wiki/Hackerspace) that will have the right gear.
 
@@ -59,6 +65,8 @@ This project is building on similar projects that use the RGB matrix to show alb
 
 * The [spotipi project](https://github.com/ryanwa18/spotipi)  by Ryan Ward
 * The [thirtytwopixels project](https://github.com/fspoettel/thirtytwopixels) by Felix Spöttel 
+
+This project was significantly improved by insights gained during the [Delft Open Hardware Academy](https://www.openhardware.academy/01_Welcome.html). 
 
 
 

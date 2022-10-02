@@ -43,12 +43,15 @@ To assemble your own SpotiStation, you will need
 * Small screwdriver to tighten down `M2.5`  screws
 * Medium/large screwdriver to tighten down `M4` and `M3` screws
 * Soldering iron and solder, to solder some headers onto components
+* Tools to cut acrylic panel (e.g. lasercutter or blade)
 
 ### 🖨️ 3D printing
 
 There are 4 large parts that need to be printed, and 3 smaller ones. I suggest you pick two different colours to print with for visual interest, but can pick whatever colour you like of course. ⚠️ **Note that there are two versions of the baseplate part: one for the Raspberry Pi zero format, and one for the normal full size Raspberry Pi.**
 
 ![3d printable parts laid out](../media/3D_printing_parts.JPG)
+
+![xray view of spotistation](../media/xray-player.gif)
 
 All parts can be printed without supports on an FDM printer, and all parts fit* on the buildplate of small 3D printers such as a `Prusa Mini+`. Print them as oriented in the `.stl`
 
@@ -77,7 +80,7 @@ On the opposite side, (the 'inside' of the `top-box`), place two hex nuts and ti
 
 ![display step 2](../media/assembly/display_step_2.JPG)
 
-Cut the `display diffuser` panel to the correct size (e.g. with a lasercutter or knife) and place it in the corresponding groove in the `display-arm`.
+Cut the `display diffuser` panel (e.g. with a lasercutter or knife) to the correct size (**161 x 168mm**)  and place it in the corresponding groove in the `display-arm`. In the image below the panel is 168mm wide, and 161mm tall. ⚠️ **Make sure the matte side of the acrylic panel faces outward (towards the user).**
 
 ![display step 3 - diffuser](../media/assembly/display_step_3.JPG)
 
