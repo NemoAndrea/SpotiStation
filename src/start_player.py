@@ -4,6 +4,7 @@ from copyreg import constructor
 import os
 import time
 import logging
+import subprocess
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -78,8 +79,19 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
     try:
         # Check that we can find the raspberry pi in playback devices (if spotifyd is working correctly)
         devices = sp.devices()["devices"]
-        assert any("SpotiStation" in device["name"] for device in devices), "Unable to find 'SpotiStation' in  \
-            spotify playback devices. There is probably something wrong with spotifyd"
+        if not any("SpotiStation" in device["name"] for device in devices):
+            # this is a rare case were the spotifyd service is running (which we check above),
+            # but not actually working correctly. This can occur e.g. if internet connection is lost
+            # and not regained for a while). We manually restart the service and
+            # hope it will work after restart. 
+
+            # restart the systemd spotifyd process
+            subprocess.run(["systemctl", "--user", "restart",  "spotifyd.service"])
+
+            # throw error (trigger auto-restart)
+            errormsg = "Unable to find 'SpotiStation' in spotify playback devices. " \
+            "Restarting spotifyd.service in attempt to fix."
+            logger.exception(errormsg); raise Exception(errormsg)
 
         # set the volume for the raspberry pi in spotify to 100%, we will do volume control on
         # device and want to guarantee that it cannot be turned up more than the base setting
