@@ -100,19 +100,19 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
         # when lanching the player, you may not want to switch to the local device for playback 
         # as you may want to listen on your phone or other set of speakers not controlled by raspberry
         # if NO device is active, we switch to RPi too, as we need something to play on
-        current_device = next(filter(lambda device: device["is_active"], devices), None)
-        if force_local_playback or current_device == None:
-            # we get the current device name. If no spotify app is opened elsewhere, current_device==None
-            current_device_name = 'none' if current_device == None else current_device['name']
+        player.playback_device = next(filter(lambda device: device["is_active"], devices), None)
+        if force_local_playback or player.playback_device == None:
+            # we get the current device name. If no spotify app is opened elsewhere, player.playback_device==None
+            current_device_name = 'none' if player.playback_device == None else player.playback_device['name']
             if force_local_playback:
                 logger.info(f"[flag:force-local-playback] Switching from {current_device_name} to Raspberry " 
                 "Pi for playback (--forcelocal is set to True )")
             else:
                 logger.info(f"Switching from {current_device_name} to Raspberry Pi for playback")
             # find the raspberry pi in devices
-            current_device = next(filter(lambda device: device["name"]=="SpotiStation", devices))        
+            player.playback_device = next(filter(lambda device: device["name"]=="SpotiStation", devices))        
             # and switch to it
-            sp.transfer_playback(current_device["id"])    
+            sp.transfer_playback(player.playback_device["id"])    
 
         # get the playlists that are in rotation, and check if there are any new playlist in account
         # TODO: handle the limit of 50 playlists (multiple api calls)
@@ -121,24 +121,23 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
         playlists = get_playlists_in_config()['in rotation']
 
         # try to find out what we are playing/will be playing
-        current_playback = sp.current_playback()  # we might already be playing something
-        if current_playback == None:  # nothing is playing (spotify has been idle for a long time)
-            # we select a song to queue up from the 'in rotation' playlists
-            sp.start_playback(current_device["id"], playlists[playlist_index][1])
-            sp.pause_playback()  # and pause it 
-        elif force_playlists:  # we are already playing somethign (from e.g. phone) 
+        current_playback = get_new_playback(sp, current_playback) 
+
+        if force_playlists:  # we are already playing somethign (from e.g. phone) 
             # we check if the current song is in the playlists config, and otherwise switch to one
             # that is in the playlist config 'in rotation' section.
             if current_playback['context']['uri'] not in map(lambda x: x[1], playlists):
                 logger.info("[flag:force-playlist] switching from ignored/unknown playlist to an in-rotation playlist")
-                sp.start_playback(current_device["id"], playlists[playlist_index][1])
+                sp.start_playback(player.playback_device["id"], playlists[playlist_index][1])
         
         # fetch and display the intial playback state
         logger.info(format_song_info(current_playback))
         player.display.set_coverart(current_playback)  # show the coverart
         if not sp.current_playback()["is_playing"]: player.display.set_display_mode("paused")
 
+        ####################
         ### Main device loop
+        ####################
 
         last_poll_time = time.time()  # initialise
         while True:
@@ -171,7 +170,7 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
                     playlist_name = playlists[playlist_index][0]
                     logger.info(f">>> Switching playlist to '{playlist_name}'") 
                     # switch to next playlist
-                    sp.start_playback(current_device["id"], playlists[playlist_index][1])
+                    sp.start_playback(player.playback_device["id"], playlists[playlist_index][1])
                     # show the next playlist overlay - it will be cleared when the next track is loaded
                     player.display.set_display_mode("next_playlist")  
                     playlist_trim = playlist_name[:13] + ".." if len(playlist_name) > 14 else playlist_name
@@ -199,7 +198,7 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
 
                 # check current playback status for changes
                 if time.time() - last_poll_time > poll_period: 
-                    latest_playback = get_new_playback(sp, current_playback)
+                    latest_playback = get_new_playback(sp, player)
 
                     # this is only in case we pause spotify on another device (e.g. phone) - this avoids 
                     # the display pause/play state getting out of sync

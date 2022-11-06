@@ -56,18 +56,28 @@ def setup_logger(mode):
     return logger
 
 
-def get_new_playback(spotipy, old_playback):
+def get_new_playback(spotipy, player):
     '''Try to fetch the latest playback information from spotify API, but return old playback in case of timeout.'''
     try:
         current_playback = spotipy.current_playback()
-        if current_playback is not None:
-            return current_playback
+
+        # all is well, we were able to refresh the current playback info
+        if current_playback is not None:  
+            player.last_playback = current_playback
+            return 
         else:
-            # TODO handle manual restarting of playback
-            logging.getLogger().exception("[Spotify API] current playback status timed out, needs kickstart", stack_info=True)
-            raise Exception("Spotify API playback issue")
+            # API call returns None; we probably timed out our playback (if player is paused for a while).
+            # We will manually restart playback of the last known playback 
+            logging.getLogger().warning("[Spotify API] current_playback status timed out, needs kickstart", stack_info=True)
+
+            # we manually restart (kickstart) the playback from the last known track
+            # this should then start playback again
+            spotipy.start_playback(player.playback_device, player.last_playback)
+            time.sleep(0.1)  # wait a bit and then manually pause playback
+            spotipy.pause_playback()  # and pause playback
+            return  # in the next loop spotipy.current_playback() should no longer be None
     except requests.exceptions.ReadTimeout:
         logging.getLogger.warning("error fetching current playback from spotify API", exc_info=True)
-        # return the old playback info. Hopefully next iteration when this is called 
-        # we are able to fetch the information correctly.
-        return old_playback  
+        # return the without updating the last_playback status (still pointing to old playback)
+        # we assume that some future API call will be able to recover
+        return   

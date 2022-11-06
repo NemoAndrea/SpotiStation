@@ -21,6 +21,10 @@ class MusicPlayer:
         self.display.set_image_from_file("./media/interface/splash_screen.png")  
         self.lastvolume = 0  # variable to hold for the mute/unmute functionality (convenience)
 
+        # current playback device (normally the spotistation itself, but could be another device
+        # connected to spotify API)
+        self.playback_device = None  
+        self.last_playback= None  # we keep track of this in case the API times out
         self.state = PlayerState.ACTIVE
 
     def any_button_got_pressed(self):
