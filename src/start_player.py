@@ -121,18 +121,18 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
         playlists = get_playlists_in_config()['in rotation']
 
         # try to find out what we are playing/will be playing
-        current_playback = get_new_playback(sp, current_playback) 
+        get_new_playback(sp, player) 
 
         if force_playlists:  # we are already playing somethign (from e.g. phone) 
             # we check if the current song is in the playlists config, and otherwise switch to one
             # that is in the playlist config 'in rotation' section.
-            if current_playback['context']['uri'] not in map(lambda x: x[1], playlists):
+            if player.last_playback['context']['uri'] not in map(lambda x: x[1], playlists):
                 logger.info("[flag:force-playlist] switching from ignored/unknown playlist to an in-rotation playlist")
                 sp.start_playback(player.playback_device["id"], playlists[playlist_index][1])
         
         # fetch and display the intial playback state
-        logger.info(format_song_info(current_playback))
-        player.display.set_coverart(current_playback)  # show the coverart
+        logger.info(format_song_info(player.last_playback))
+        player.display.set_coverart(player.last_playback)  # show the coverart
         if not sp.current_playback()["is_playing"]: player.display.set_display_mode("paused")
 
         ####################
@@ -143,13 +143,13 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
         while True:
             if player.state == PlayerState.ACTIVE:
                 if player.playpause.got_pressed():
-                    playback = get_new_playback(sp, current_playback)
-                    if playback["is_playing"]:  # get current playback status (play/pause)
+                    get_new_playback(sp, player)
+                    if player.last_playback["is_playing"]:  # get current playback status (play/pause)
                         logger.info("pausing playback")
                         sp.pause_playback()
                         player.display.set_display_mode("paused")
                         # also show the song name at the top of display when track is paused
-                        player.display.add_text_to_overlay(trim_song_name(playback), (32, 5),
+                        player.display.add_text_to_overlay(trim_song_name(player.last_playback), (32, 5),
                             fill=(255,255,255,200), clear=False)  
                         player.display.add_overlay_to_display(dimming=0.9)
                     else:
@@ -197,25 +197,26 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
                     volume = slider_volume 
 
                 # check current playback status for changes
-                if time.time() - last_poll_time > poll_period: 
-                    latest_playback = get_new_playback(sp, player)
+                if time.time() - last_poll_time > poll_period:
+                    old_playback = player.last_playback
+                    get_new_playback(sp, player)  # update playback from API
 
                     # this is only in case we pause spotify on another device (e.g. phone) - this avoids 
                     # the display pause/play state getting out of sync
-                    if latest_playback["is_playing"] and player.display.overlay_mode=="paused":
+                    if player.last_playback["is_playing"] and player.display.overlay_mode=="paused":
                         player.display.set_display_mode("")  # clear the erroneous pause overlay
-                    if (not latest_playback["is_playing"]) and player.display.overlay_mode==None:
+                    if (not player.last_playback["is_playing"]) and player.display.overlay_mode==None:
                         player.display.set_display_mode("paused")  # add pause overlay that is missing
 
                     # check if the song has changed (by 'item' id) - in this case the 'current_playback'
                     # could be older than the 'latest_playback'
-                    if current_playback["item"]["id"] != latest_playback["item"]['id']:
-                        current_playback = latest_playback  # update current playback for next loop
-                        logger.info(format_song_info(current_playback))
-                        player.display.set_coverart(current_playback) 
+                    if player.last_playback["item"]["id"] != old_playback["item"]['id']:
+                        # update current playback for next loop
+                        logger.info(format_song_info(player.last_playback))
+                        player.display.set_coverart(player.last_playback) 
 
                         # set a temporary text overlay showing album name                                             
-                        player.display.add_text_to_overlay(trim_song_name(current_playback), (32, 5),
+                        player.display.add_text_to_overlay(trim_song_name(player.last_playback), (32, 5),
                             fill=(255,255,255,200), clear=True)  
                         player.display.add_overlay_to_display_falloff(dimming=0.85, offset=9, length=32) 
                         if config.getboolean('settings', 'fade-song-name'): 
