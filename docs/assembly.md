@@ -12,7 +12,7 @@ To build the SpotiStation, you will need to purchase the following items (or fin
 | Adafruit | Black LED Diffusion Acrylic Panel 12" x 12"                  | 1      | 4594           | 9.6               |
 | Adafruit | NeoKey Socket Breakout for Mechanical Key Switches with NeoPixel | 5      | 4978           | 8.4               |
 | Adafruit | Adafruit NeoSlider I2C QT Slide Potentiometer                | 1      | 5295           | 9.6               |
-| Adafruit | 5V 10A switching power supply                                | 1      | 658            | 28.8              |
+| Digi-key | 5V 3A power supply | 1 |	102-SWH15-5B-EB-P5-ND | 17.55 |
 | Adafruit | Relegendable Plastic Keycaps for MX Compatible Switches 10 pack | 1      | 5039           | 4.76              |
 | Adafruit | Any MX-style keyswitch, ideally with heavy spring            | 5      | 5124           | 5                 |
 | Adafruit | Black Nylon Machine Screw and Stand-off Set – M2.5 Thread    | 1      | 3299           | 17                |
@@ -21,7 +21,7 @@ To build the SpotiStation, you will need to purchase the following items (or fin
 | Adafruit | Break-away 0.1" 36-pin strip right-angle male header (10 pack) | 1      | 1540           | 5                 |
 
 
-Total: **174 Euro**
+Total: **163 Euro**
 
 *Full-size Raspberry Pi's will also work as long as they are version 3 or newer. For version 3 you may need a USB Bluetooth adapter.
 
