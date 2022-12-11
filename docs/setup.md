@@ -2,7 +2,7 @@
 
 ### 🚧 IN NEED OF REVIEW: this setup guide is currently purely functional, it needs to be rewritten for new users.
 
-We are assuming the code is run from a raspberry pi running `Raspberry Pi OS Lite` and that the raspberry pi has some way to connect to Wi-Fi. Bluetooth connectivity is required if speakers are to be driven wirelessly (as opposed to via 3.5mm jack of the Pi).
+We are assuming the code is run from a raspberry pi running `Raspberry Pi OS Lite 32-Bit` and that the raspberry pi has some way to connect to Wi-Fi. Bluetooth connectivity is required if speakers are to be driven wirelessly (as opposed to via 3.5mm jack of the Pi).
 
 Raspbian OS Lite comes with A Python 3 installation, and a GPIO library, so that will be pre-installed. But we will still need to get `pip` installed. 
 
@@ -156,7 +156,9 @@ export SPOTIPY_CLIENT_SECRET='your-spotify-client-secret'
 export SPOTIPY_REDIRECT_URI='your-app-redirect-url'
 ```
 
-then run `test_spotipy.py` it will generate a .cache file in the current directory. If all is well, you will be shown a link. Paste that link in a browser where you are signed into Spotify. You will be asked to agree to some terms. Read the terms, agree and then you will be shown a blank/error page. **This is not a mistake!** The URL of the page will actually contain a code that you need to paste back into your terminal! Copy **the entire** url and paste it into the terminal as asked. 
+then navigate into the SpotiStation repository and run `python /src/cache_spotipy_credentials.py` and follow the instructions. If all is well, you will be shown a link. Paste that link in a browser where you are signed into Spotify. You will be asked to agree to some terms. Read the terms, agree and then you will be shown a blank/error page. **This is not a mistake!** The URL of the page will actually contain a code that you need to paste back into your terminal! Copy **the entire** url and paste it into the terminal as asked. Check that after this procedure a `.cache` file was generated in the current directory.
+
+> **🚧 This section is in need of revision - the cache file is currently not used.
 
 If that went well a `.creds` file should have been generated. Move it into the root folder of the repository (so out of `src`). 
 
