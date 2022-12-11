@@ -38,13 +38,20 @@ We will also need to be able to control the system volume, for which we will nee
 pip3 install pyalsaaudio
 ```
 
-### TODO: setup RGB panel
+### 🌈 RGB panel setup
 
-Solder jumper between 4 and 18, picture quality is not good enough without. Analog audio (3.5mm jack or HDMI) will be disabled, but Bluetooth audio is fine.
+We follow [Adafruit's guide](https://learn.adafruit.com/adafruit-rgb-matrix-bonnet-for-raspberry-pi/driving-matrices#step-6-log-into-your-pi-to-install-and-run-software-1745233) and install the drivers by Henner Zeller h.zeller@acm.org. Download and run the installer script by:
 
-Enable the CPU core reservation (pi 3 and 4) with `isolcpus=3`
+```
+curl https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/main/rgb-matrix.sh >rgb-matrix.sh
+sudo bash rgb-matrix.sh
+```
+And follow the instructions in the installer script. We are using the matrix bonnet, not the hat with RTC. We also want the `quality` option.
 
-### Setup - Spotify (background)
+* Solder jumper between 4 and 18, picture quality is not good enough without. Analog audio (3.5mm jack or HDMI) will be disabled, but Bluetooth audio is fine.
+* Enable the CPU core reservation (pi 3, zero 2, and 4) in `/boot/cmdline.txt`, by adding `isolcpus=3` to the file (space separated from other items in that file). Example contents: ```console=serial0,115200 console=tty1 root=PARTUUID=060e4657-02 rootfstype=ext4 fsck.repair=yes rootwait isolcpus=3``` 
+
+### 🎵 Setup - Spotify (background)
 
 To stream Spotify, we will use [spotifyd](https://github.com/Spotifyd). We need to install the latest release (for ARMv6), as per the instructions laid out on [their raspberry pi guide page](https://spotifyd.github.io/spotifyd/installation/Raspberry-Pi.html). For completeness I will cover the contents of their page here. If in doubt, follow the instructions on `spotifyd`'s page.  Make sure you get the latest release. At the time of writing, the latest version is `0.3.3`, so we install that with:
 
