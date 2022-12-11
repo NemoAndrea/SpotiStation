@@ -22,7 +22,7 @@ In addition, we will need to activate the `I2C` (hardware) interface on the Pi (
 sudo raspi-config
 ```
 
-In the configuration menu, go to `Display Options`, enable `I2C` and close out of the menu. 
+In the configuration menu, go to `Interface Options`, enable `I2C` and close out of the menu. 
 
 For reasons that are not entirely clear to me, the NeoSlider does not work well with the default i2c bus frequency. It will randomly lock up the bus, or read values beyond it's normal valid range (0,1023). To fix this, we need to [change the i2c bus frequency to 400kHz](https://gist.github.com/ribasco/c22ab6b791e681800df47dd0a46c7c3a) on the Pi. 
 
