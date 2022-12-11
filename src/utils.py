@@ -77,7 +77,7 @@ def get_new_playback(spotipy, player):
             spotipy.pause_playback()  # and pause playback
             return  # in the next loop spotipy.current_playback() should no longer be None
     except requests.exceptions.ReadTimeout:
-        logging.getLogger.warning("error fetching current playback from spotify API", exc_info=True)
+        logging.getLogger().warning("error fetching current playback from spotify API", exc_info=True)
         # return the without updating the last_playback status (still pointing to old playback)
         # we assume that some future API call will be able to recover
         return   
