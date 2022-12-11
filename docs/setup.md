@@ -2,7 +2,7 @@
 
 ### 🚧 IN NEED OF REVIEW: this setup guide is currently purely functional, it needs to be rewritten for new users.
 
-We are assuming the code is run from a raspberry pi running `Raspberry Pi OS Lite` and that the raspberry pi has some way to connect to Wi-Fi. Bluetooth connectivity is required if speakers are to be driven wirelessly (as opposed to via 3.5mm jack of the Pi).
+We are assuming the code is run from a raspberry pi running `Raspberry Pi OS Lite 32-Bit` and that the raspberry pi has some way to connect to Wi-Fi. Bluetooth connectivity is required if speakers are to be driven wirelessly (as opposed to via 3.5mm jack of the Pi).
 
 Raspbian OS Lite comes with A Python 3 installation, and a GPIO library, so that will be pre-installed. But we will still need to get `pip` installed. 
 
