@@ -70,11 +70,16 @@ def get_new_playback(spotipy, player):
             # We will manually restart playback of the last known playback 
             logging.getLogger().warning("[Spotify API] current_playback status timed out, needs kickstart", stack_info=True)
 
-            # we manually restart (kickstart) the playback from the last known track
-            # this should then start playback again
-            spotipy.start_playback(player.playback_device, player.last_playback)
-            time.sleep(0.1)  # wait a bit and then manually pause playback
-            spotipy.pause_playback()  # and pause playback
+            # we manually restart (kickstart) the playback from the last known track (and context
+            # i.e. playlist); this should then start playback again
+            spotipy.start_playback(player.playback_device["id"],
+                player.last_playback["context"]["uri"], 
+                None, {"uri": player.last_playback["item"]["uri"]})
+            time.sleep(0.2)  # wait a bit and then manually pause playback
+            spotipy.pause_playback()  # and pause playback - it might be preferred to match the 
+                                      # last state of playback (i.e. last_playback["is_playing"]) 
+                                      # but since this error seems to arise only when the player
+                                      # is paused for long periods, I think this is safer 
             return  # in the next loop spotipy.current_playback() should no longer be None
     except requests.exceptions.ReadTimeout:
         logging.getLogger().warning("error fetching current playback from spotify API", exc_info=True)

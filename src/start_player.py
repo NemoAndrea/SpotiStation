@@ -143,7 +143,6 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
         while True:
             if player.state == PlayerState.ACTIVE:
                 if player.playpause.got_pressed():
-                    get_new_playback(sp, player)
                     if player.last_playback["is_playing"]:  # get current playback status (play/pause)
                         logger.info("pausing playback")
                         sp.pause_playback()
