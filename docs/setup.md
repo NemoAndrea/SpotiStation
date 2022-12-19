@@ -38,6 +38,35 @@ We will also need to be able to control the system volume, for which we will nee
 pip3 install pyalsaaudio
 ```
 
+### 💾 Download the SpotiStation code
+
+We will need to get the SpotiStation code onto the raspberry Pi. You can either
+
+1. Clone this repository directly (this will get you the latest version of the code)
+2. Download the latest release (generally older but more stable in principle)
+
+Whichever option you chose, we want the contents to be stored in a folder called `SpotiStation` located **in the home directory**. Make one and enter it by
+
+ ```
+cd 
+mkdir SpotiStation
+ ```
+
+And then for option (1) we use
+
+```
+git clone https://github.com/NemoAndrea/SpotiStation.git SpotiStation
+```
+
+And for option (2) 
+
+```
+curl -L https://api.github.com/repos/NemoAndrea/SpotiStation/tarball/<version> -o spotistation.tgz
+tar -xvf spotistation.tgz --strip-components=1 -C SpotiStation
+```
+
+Where you replace `<version>` with whichever release is the latest, e.g. `v0.1.0`
+
 ### 🌈 RGB panel setup
 
 We follow [Adafruit's guide](https://learn.adafruit.com/adafruit-rgb-matrix-bonnet-for-raspberry-pi/driving-matrices#step-6-log-into-your-pi-to-install-and-run-software-1745233) and install the drivers by Henner Zeller h.zeller@acm.org. Download and run the installer script by:
@@ -87,7 +116,7 @@ mixer = "PCM"
 volume-controller = "alsa" # or alsa_linear, or softvol
 #onevent = command_run_on_playback_event
 device_name = "SpotiStation"
-bitrate = 96|160|320
+bitrate = 320
 cache_path = "cache_directory"
 volume-normalisation = true
 normalisation-pregain = -10
@@ -97,13 +126,13 @@ Where of course the following items have to be changed to your own credentials/r
 
 * username
 * password
-* bitrate (choose 320)
-
 * (optional) device - uncomment this line (remove `#`) and set a device if you want to select a specific output for audio (e.g. HDMI/Bluetooth)
 
 > If you use Facebook login for Spotify, you will need to go to Spotify's website and look at your account settings. You should be able to find a numerical username. This is the username you will want to use for `spotifyd`. As for the password, you will probably have to request a 'device password' somewhere in the account settings in Spotify. This takes less than 3 minutes.
 
-If you have filled in your credentials, it would be good to check if its all working before making the daemon start up automatically. Give it a whirl by typing `~/spotifyd --no-daemon`. **You should get some information about the information it is using and if it managed to make a connection. If you go to Spotify on your phone or pc, the device should now be listed in playback devices (as 'Music_Pi')!**
+If you have filled in your credentials, it would be good to check if its all working before making the daemon start up automatically. Give it a whirl by typing `~/spotifyd --no-daemon`. **You should get some information about the information it is using and if it managed to make a connection. If you go to Spotify on your phone or pc, the device should now be listed in playback devices (as 'SpotiStation')!**
+
+![spotify device playback menu showing spotistation listed](../media/spotify_playback_device_selection.JPG)
 
 If everything worked up to this point, it is time to set `spotifyd` to start when the raspberry pi is booted. That way we always have it running and ready to play! Let's make a service file for `systemctl` to run.
 
@@ -241,8 +270,8 @@ After=spotifyd.service
 
 [Service]
 Type=simple
-WorkingDirectory=/home/musicpi/minimal-music-player
-ExecStart=/usr/bin/sudo -E /usr/bin/python /home/musicpi/minimal-music-player/src/start_player.py
+WorkingDirectory=/home/musicpi/SpotiStation
+ExecStart=/usr/bin/sudo -E /usr/bin/python /home/musicpi/SpotiStation/src/start_player.py
 Restart=always
 RestartSec=60
 
@@ -276,6 +305,6 @@ alias stopplayer='systemctl --user stop rpi-spotiplayer.service'
 alias restartplayer='systemctl --user restart rpi-spotiplayer.service'
 # in case you want to manually start the player and observe the log in terminal via SSH
 # make sure the service is stopped and that you are in the repository directory
-alias startplayer_manual='sudo -E python ~/minimal-music-player/src/start_player.py'
+alias startplayer_manual='sudo -E python ~/SpotiStation/src/start_player.py'
 ```
 
