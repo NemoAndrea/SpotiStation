@@ -131,11 +131,19 @@ For the 2 inwards sockets, we want to do the same: break off two right angled pi
 
 ![electronics step 4 - inward soldering](../media/assembly/electronics_step_4.JPG)
 
-Then we want to solder the RGB bonnet. Here we will need to solder 9 header pins and add a short bit of wire between pins 4 and 18 to improve the image quality, as is lined out in the [RGB bonnet guide](https://learn.adafruit.com/adafruit-rgb-matrix-bonnet-for-raspberry-pi/driving-matrices). As there is limited room in the enclosure, we will again use the right-angled headers. I suggest you break of a set of 5pins, a set of 2 pins, and two single pins, and solder them as in the picture below. 
+Then we want to solder the RGB bonnet. Here we will need to solder the following items:
+
+* 9 header pins
+* a short bit of wire between pins 4 and 18 to improve the image quality, as is lined out in the [RGB bonnet guide](https://learn.adafruit.com/adafruit-rgb-matrix-bonnet-for-raspberry-pi/driving-matrices).
+* A shorting piece of solder on backside pad (E to number 8)
+
+ As there is limited room in the enclosure, we will again use the right-angled headers. I suggest you break of a set of 5pins, a set of 2 pins, and two single pins, and solder them as in the picture below. 
 
 ![electronics step 5 - RGB matrix bonnet](../media/assembly/electronics_step_5.JPG)
 
 ![electronics step 5 - RGB matrix bonnet](../media/assembly/electronics_step_5b.JPG)
+
+![electronics step 5 - RGB matrix bonnet](../media/assembly/electronics_step_5c.JPG)
 
 Now it is time to mount all the remaining components and wire it all up 🎉
 
