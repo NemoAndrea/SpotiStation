@@ -120,6 +120,9 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
         update_playlists(api_playlists['items'])
         playlists = get_playlists_in_config()['in rotation']
 
+        # Ensure the shuffle mode (on/off) is set correctly from value listed in config
+        sp.shuffle(config.getboolean('settings', 'shuffle-songs'))
+
         # try to find out what we are playing/will be playing
         get_new_playback(sp, player) 
 
