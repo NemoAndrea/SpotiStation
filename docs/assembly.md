@@ -123,11 +123,11 @@ We will need to solder:
 1. Headers onto the `NeoKey Sockets` facing outward [3X]
 2. Headers on the `NeoKey Sockets` facing inward [2X]
 3. Headers onto the `RGB matrix bonnet` 
-4. Ground wires together
+4. Adding headers to NeoSlider ground & solder ground wires together 
 
 > **☠️ Warning: for your own health, always solder in a well ventilated area or have a system that extracts the soldering fumes.**
 
-First, let's do the 3 outward sockets. It's going to be a huge help if you have something that can hold onto the parts while you solder (unless you have 4 arms).  Break off two pins of the right angled headers and solder them onto the NeoKey `S+` and `S-` holes.  **⚠️ Ensure you are soldering on the side with the LED (otherwise the switch wont fit!).** Have the headers point outward.
+First, let's do the 3 outward sockets. It's going to be a huge help if you have something that can hold onto the parts while you solder (unless you have 4 arms).  Break off two pins of the right angled headers and solder them onto the NeoKey `S+` and `S-` holes (also labeled as C(athode) and A(node)).  **⚠️Ensure you are soldering on the side with the LED (otherwise the switch wont fit!).** Have the headers point outward.
 
 ![electronics step 3 - outward soldering](../media/assembly/electronics_step_3.JPG)
 
@@ -149,6 +149,10 @@ Then we want to solder the RGB bonnet. Here we will need to solder the following
 
 ![electronics step 5 - RGB matrix bonnet](../media/assembly/electronics_step_5c.JPG)
 
+Finally we solder some right-angled headers onto the NeoSliders so that we can make use of the ground pads on the slider. The RGB bonnet only has a single ground connection, which is used up by the StemmaQT cable, so we use the Slider `gnd` pads to ground our `NeoKeys`. We only need a header connected to ground. but a header of two pins is a lot easier to solder.
+
+![](../media/assembly/electronics_slider_soldering.JPG)
+
 Now it is time to mount all the remaining components and wire it all up 🎉
 
 To start with, add the  `RGB matrix bonnet` onto the raspberry pi. That should slide onto the Pi's headers with quite a lot of friction. 
@@ -157,7 +161,13 @@ Then, it is time to start connecting the switches. We will do the side buttons f
 
 ![electronics - mx switches side](../media/assembly/electronics_step_6.JPG)
 
-On the backside (where the MX-switch pins are), add the *inward-facing* `NeoKeys`, with the headers pointing down as in the picture. *It ain't pretty but it will work.* I suggest you add some of the header wires onto the headers *before* you place them on the switches, but it is not a problem if you don't as the PCBs are only held in place by friction. It should look like the situation below
+On the backside (where the MX-switch pins are), add the *inward-facing* `NeoKeys`, with the headers pointing down as in the picture. *It ain't pretty but it will work.* I suggest you add some of the header wires onto the headers *before* you place them on the switches, but it is not a problem if you don't as the PCBs are only held in place by friction. 
+
+> **Note**
+>
+> The 5 `S-` cables of the `NeoKeys` need to be wired to ground. The easiest way is to solder them to the `GND` pads on the ``NeoSlider`. These are connected to the Raspberry Pi ground via the `Stemma QT` connections. 
+
+It should look like the situation below:
 
 ![electronics - mx switches side](../media/assembly/electronics_step_6b.JPG)
 
@@ -173,8 +183,6 @@ Now all we need to do still is set up the main button `NeoKey`. This too attache
 
 On the switch, you can mount one of the `Relegendable Plastic Keycaps`, with the clear lid **taken off**. On top of that, the main play button can be placed. 
 
-> ⚠️ Initially the button mechanism may have a lot of friction. Over some usage it will wear down and actuation will get smoother. If it is still not very smooth, you could sand down the pegs a bit on the printed part.
-
 ![electronics step - main button](../media/assembly/electronics_step_8.JPG)
 
 > The `NeoKey` PCB can be mounted either way, with the header pins pointing towards the `NeoSlider` or towards the side button. It doesn't really matter.
@@ -183,10 +191,8 @@ On the switch, you can mount one of the `Relegendable Plastic Keycaps`, with the
 
 Everything is in place, let's wire it up! Connect the `Stemma QT` cables to the pins on the `RGB matrix header` in the following way:
 
-
-
-* Yellow wire to SDA
-* Blue wire to SCL
+* Blue wire to SDA
+* Yellow wire to SCL
 * Red wire to +3.3V
 * Black wire to GND
 
@@ -198,9 +204,10 @@ For all the `NeoKeys`, wire the `S+` keys to the following pins
 * Side button 1 (closest to Raspberry Pi) to `CE0`
 * Side button 2 to `CE1` 
 
-![electronics step - wiring diagram](../media/assembly/electronics_step_5.JPG)
+> **Note**
+> If you don't mind soldering many wires together irreversibly, you can solder all the `S-` connections of the `NeoKeys` to the ground pins on the NeoSlider . A slightly nicer approach is to use some kind of [wire block connector](https://www.adafruit.com/product/874).
 
-The 5 `S-` cables of the `NeoKeys` need to be wired to ground. The easiest way is to solder them to the `GND` pads on the ``NeoSlider`. These are connected to the Raspberry Pi ground via the `Stemma QT` connections. 
+![electronics step - wiring diagram](../media/assembly/electronics_step_5.JPG)
 
 That should be most of the box set up. If you like, you can use zip ties to keep the cables in check; there are anchor points included on the box to secure the zip ties.
 
@@ -210,7 +217,7 @@ That should be most of the box set up. If you like, you can use zip ties to keep
 
 > Note that I used a fancy connector (orange) to connect the ground cables together; perf board would work just as well and be a lot cheaper. This connector is just handier during prototyping when it needs to be taken apart a lot.
 
-> Note the weird Bluetooth dongle plugged into the USB port; the one listed in the parts list should be smaller and fit better.
+> Note the weird Bluetooth dongle plugged into the USB port; the one listed in the parts list should be smaller and fit better. If you are using a Pi Zero, no adapter is needed.
 
 #### Connecting the display and final assembly 
 
