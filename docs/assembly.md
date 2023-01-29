@@ -165,7 +165,7 @@ On the backside (where the MX-switch pins are), add the *inward-facing* `NeoKeys
 
 > **Note**
 >
-> The 5 `S-` cables of the `NeoKeys` need to be wired to ground. The easiest way is to solder them to the `GND` pads on the ``NeoSlider`. These are connected to the Raspberry Pi ground via the `Stemma QT` connections. 
+> The 5 `S-` cables of the `NeoKeys` need to be wired to ground. The easiest way is to solder them to the `GND` pads on the `NeoSlider`. These are connected to the Raspberry Pi ground via the `Stemma QT` connections. 
 
 It should look like the situation below:
 
