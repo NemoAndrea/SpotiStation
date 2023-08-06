@@ -8,7 +8,6 @@ import subprocess
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-import alsaaudio
 
 from read_cache_into_environment import get_spotipy_auth
 from setup_hardware import MusicPlayer, PlayerState
@@ -17,6 +16,7 @@ from config_manager import update_playlists, get_playlists_in_config, get_device
 from utils import format_song_info, has_internet_connection, has_bluetooth_connection, setup_logger, get_new_playback, trim_song_name
 from quiet_mode import quiet_mode_active, enable_quiet_mode, enable_locked_mode, quiet_mode_enabled_since, set_display_quiet_mode
 
+import alsaaudio  # for mute functionality
 
 '''Raspberry pi music player'''
 def start_player(force_local_playback=False, force_playlists=False, log_mode=logging.INFO):
@@ -48,10 +48,6 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
         logger.exception("[setup] No bluetooth audio connection available!", stack_info=True)
         raise Exception("No bluetooth audio connection available!")
 
-    # volume control
-    audio = alsaaudio.Mixer()  # default settings should work
-    volume = audio.getvolume()[0]  # intialise volume [0-100]
-
     # check if the spotifyd service is running
     if not os.system('systemctl --user is-active --quiet spotifyd.service')==0:
         player.display.set_display_mode("no_spotifyd")
@@ -70,6 +66,18 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
         sp = spotipy.Spotify(auth_manager=SpotifyOAuth(cache_path=".cache"))
     except Exception as e:
         logger.exception("Problem setting up Spotipy (python spotify api control).")
+
+    # we need to get a handle on alsa for the mute functionality
+    # note that volume adjustment via the slider is handled by a separate python service
+    audio = alsaaudio.Mixer()  
+    audio.setmute(0)
+    if player.state == PlayerState.ACTIVE:
+        audio.setmute(0)  # this is insurance in case the player crashes in quiet/lock mode and
+                          # comes out in active mode. The system could remain muted without this.
+
+    # this is a bit hacky, but due to some startup sequence issues the volume service will
+    # start correctly but not actually control volume. Restarting (sometime after boot) fixes it.
+    subprocess.run(["systemctl", "--user", "restart",  "rpi-spotiplayer-volume.service"])
 
     ### Boot Menu
 
@@ -93,7 +101,7 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
             "Restarting spotifyd.service in attempt to fix."
             logger.exception(errormsg); raise Exception(errormsg)
 
-        # set the volume for the raspberry pi in spotify to 100%, we will do volume control on
+        # set the volume for the raspberry pi in _spotify_ to 100%, we will do volume control on
         # device and want to guarantee that it cannot be turned up more than the base setting
         sp.volume(100, next(filter(lambda device: device["name"]=="SpotiStation", devices))["id"])
 
@@ -184,19 +192,10 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
                     time.sleep(1)  # ensure the overlay is visible
 
                 # Handle device getting LOCKED by administrator or user
-                elif config.getboolean('settings', 'lock-mode-enabled') and player.backbutton_1.got_pressed():
-                    logger.info(f"Leaving the ACTIVE state for LOCKED state.")
+                elif config.getboolean('settings', 'lock-mode-enabled') and player.backbutton_1.got_pressed():                                       
+                    logger.info(f"Leaving the ACTIVE state for LOCKED state.") 
                     enable_locked_mode(player, sp, config)
-                    continue
-
-                # adjust volume
-
-                slider_volume = int(player.volumeslider.position()*100)
-                if volume != slider_volume:
-                    logger.debug(f'setting volume to {slider_volume} (0-100)')
-                    print(f'setting volume to {slider_volume} (0-100)')
-                    audio.setvolume(slider_volume)
-                    volume = slider_volume 
+                    continue 
 
                 # check current playback status for changes
                 if time.time() - last_poll_time > poll_period:
@@ -245,7 +244,7 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
                 if not quiet_mode_active(config):
                     logger.info("Leaving the QUIET state and returning to ACTIVE state")
                     # set the volume back to slider val
-                    player.unmute(audio) 
+                    audio.setmute(0)
                     player.state = PlayerState.ACTIVE
                     player.display.timer.reset()
 
@@ -264,7 +263,7 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
                         player.display.scale_intensity(0)                     
 
                 # set volume to 0 (as someone could still turn ON playback via the API, e.g. via phone)  
-                player.mute(audio)         
+                audio.setmute(1)        
                 time.sleep(0.3)  # in QUIET mode we don't need to loop fast          
             
             # player is in the LOCKED state (manually enabled by user)
@@ -274,7 +273,7 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
                     logger.info("Leaving the LOCKED state for QUIET state.")
                     enable_quiet_mode(player, sp, config)  # start quiet mode
 
-                player.mute(audio) 
+                audio.setmute(1)
                 time.sleep(0.3)  # in LOCKED mode we don't need to loop fast          
     except KeyboardInterrupt as e:
         logger.warning("SpotiStation interrupted via KeyboardInterrupt")

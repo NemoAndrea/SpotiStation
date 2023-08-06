@@ -23,7 +23,8 @@ class MusicDisplay:
         self.overlay= Image.new('RGBA', (width, height)) 
         # we use the silkscreen font by Jason Kottke, which is meant to be used at 
         # 8pt (or multiples of that)
-        self.font = ImageFont.truetype('/home/musicpi/minimal-music-player/media/slkscr.ttf',8)  
+        # TODO: make this a relative link
+        self.font = ImageFont.truetype('/home/musicpi/SpotiStation/media/slkscr.ttf',8)  
         self.timer = DisplayOverlayTimer()
         self.overlay_mode = None  # keep track of what kind of overlay we are using
 

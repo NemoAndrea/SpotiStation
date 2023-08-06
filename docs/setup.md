@@ -250,6 +250,44 @@ Now we are paired (**but not connected**) with the device - this is the one-time
 connect <MAC adress
 ```
 
+## Setup - run slider volume control as service
+
+We run the volume control via the slider as a separate scrip to ensure we can always adjust volume even if the main program crashes. So, let's set that up.
+
+```
+nano ~/.config/systemd/user/rpi-spotiplayer-volume.service
+```
+
+And make the file contents:
+
+```
+[Unit]
+Description=Volume control handler for SpotiStation
+
+[Service]
+Type=simple
+WorkingDirectory=/home/musicpi/SpotiStation
+ExecStart=/usr/bin/python /home/musicpi/SpotiStation/src/regulate_volume.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+Next, make the service runnable:
+
+```
+sudo chmod 644 ~/.config/systemd/user/rpi-spotiplayer-volume.service
+```
+
+And finally make sure it runs after system boot:
+
+```
+systemctl --user enable rpi-spotiplayer-volume.service
+```
+
+
 ## Setup - run music player as service
 
 We need to ensure the music player runs as a service upon startup. We use the same approach as before, but specify that we want to run this as root, but still as a user.

@@ -13,13 +13,11 @@ class MusicPlayer:
         self.sidebutton_2 = buttons[2]
         self.backbutton_1 = buttons[3]
         self.backbutton_2 = buttons[4]
-        self.volumeslider = intialise_slider()
 
         # Set up display - ROOT is dropped here, be careful about removing/reordering for security.
         self.display = MusicDisplay(64, 64)  # needs root privileges, but those are dropped after this function 
         # set the boot screen image 
         self.display.set_image_from_file("./media/interface/splash_screen.png")  
-        self.lastvolume = 0  # variable to hold for the mute/unmute functionality (convenience)
 
         # current playback device (normally the spotistation itself, but could be another device
         # connected to spotify API)
@@ -39,21 +37,13 @@ class MusicPlayer:
              self.backbutton_2.got_pressed(),
              self.backbutton_1.got_pressed()
         ])
-
-    def mute(self, sys_audio):
-        self.lastvolume = int(self.volumeslider.position()*100)
-        sys_audio.setvolume(0) 
-
-    def unmute(self, sys_audio):
-        sys_audio.setvolume(self.lastvolume)  
         
-        
-
 
 class PlayerState(Enum):
     ACTIVE = auto()
     QUIET = auto()
     LOCKED = auto()
+
 
 
 def initialise_buttons():
@@ -101,44 +91,3 @@ class PlayerButton:
         else:
             self.last_value = self.button.value
             return False
-
-
-
-from adafruit_seesaw.seesaw import Seesaw
-from adafruit_seesaw.analoginput import AnalogInput
-from adafruit_seesaw import neopixel
-
-def intialise_slider():
-    neoslider = Seesaw(board.I2C(), 0x30)
-    potentiometer = AnalogInput(neoslider, 18)
-    ledpixel = neopixel.NeoPixel(neoslider, 14, 4)
-
-    return VolumeSlider(potentiometer, ledpixel)
-
-
-class VolumeSlider:
-    def __init__(self, potentiometer, neopixel):
-        self.slider = potentiometer
-        self.led = neopixel
-
-    '''
-    Return value of neoslider between 0-1 or None.
-    
-    Careful: calling `slider.value` in too quick succession seems to result
-    in serious errors that require a RPi restart.
-
-    On the RPi the slider returns values outside the spec range [0, 1023]
-    this is probably something wrong in the hardware or rpi i2c but we will 
-    just have to deal with it by returning None and then handling it. 
-
-    setting RPi i2c bus frequency to 400kHz seems to be a solution, but better be 
-    safe than sorry and make sure we can handle an edge case
-    '''
-    def position(self):
-        value = self.slider.value
-
-        if value > 1023:  
-            return None
-        else:
-            return value / 1023  # we will return float between [0, 1]
-            

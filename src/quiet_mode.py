@@ -27,15 +27,15 @@ def quiet_mode_enabled_since(config, time_since=30):
     offset_minutes = time_since % 60
     offset_hours = time_since // 60
     offset_time = datetime.now().replace(
-        hour = starttime_raw.hour + offset_hours,
-        minute = starttime_raw.minute + offset_minutes
+        hour = (starttime_raw.hour + offset_hours + (starttime_raw.minute + offset_minutes)//60) % 24,
+        minute = (starttime_raw.minute + offset_minutes) % 60
     )
 
     # check if time_since minutes have passed since QUIET mode started
     # or if current time is before the end time (e.g 01:20 < 9:00)
     # TODO make this more robust (drop assumption that start time is <23:59 and end time in morning)
     if current_time > offset_time or current_time < endtime:       
-        return True   # we have in in quiet mode for time_since minutes or more
+        return False   # we have in in quiet mode for time_since minutes or more
     else:
         return False
 
