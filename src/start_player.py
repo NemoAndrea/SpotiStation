@@ -27,6 +27,17 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
 
     # this also sets up the display - ROOT is dropped here, be careful about removing/reordering for security.
     player = MusicPlayer()
+    
+    # wifi and internet checks
+    if not has_internet_connection():        
+        player.display.set_display_mode("no_wifi")
+        time.sleep(30)
+        logger.exception("[setup] No internet connection available!", stack_info=True)
+        raise Exception("No internet connection available!")
+    
+    ### Boot Menu
+
+    query_boot_mode(player)  # has to be called after we have established internet connection
 
     ### Software setup and checks
 
@@ -34,19 +45,15 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
     playlist_index = int(config['playback']['current-playlist-index'])
     poll_period = float(config['settings']['playback-poll-period'])
 
-    # wifi and internet checks
-    if not has_internet_connection():        
-        player.display.set_display_mode("no_wifi")
-        time.sleep(30)
-        logger.exception("[setup] No internet connection available!", stack_info=True)
-        raise Exception("No internet connection available!")
-
-    # bluetooth checks
-    if not has_bluetooth_connection(config['connectivity']['bluetooth-mac']):        
-        player.display.set_display_mode("no_bluetooth_audio")
-        time.sleep(30)
-        logger.exception("[setup] No bluetooth audio connection available!", stack_info=True)
-        raise Exception("No bluetooth audio connection available!")
+    # # bluetooth checks
+    if not config.getboolean('connectivity', 'skip-bluetooth'):  # user can specify to skip connecting
+        # check if we are actually able to make a connection to the speaker
+        # and try a few times before throwing an error if we cannot find the speaker
+        if not has_bluetooth_connection(config['connectivity']['bluetooth-mac']):  
+            player.display.set_display_mode("no_bluetooth_audio")
+            time.sleep(30)
+            logger.exception("[setup] No bluetooth audio connection available!", stack_info=True)
+            raise Exception("No bluetooth audio connection available!")
 
     # check if the spotifyd service is running
     if not os.system('systemctl --user is-active --quiet spotifyd.service')==0:
@@ -78,10 +85,6 @@ def start_player(force_local_playback=False, force_playlists=False, log_mode=log
     # this is a bit hacky, but due to some startup sequence issues the volume service will
     # start correctly but not actually control volume. Restarting (sometime after boot) fixes it.
     subprocess.run(["systemctl", "--user", "restart",  "rpi-spotiplayer-volume.service"])
-
-    ### Boot Menu
-
-    query_boot_mode(player)
 
     # wrap everything in try except in order to log issues as they occur
     try:

@@ -1,7 +1,7 @@
 import socket
 import time
 import math
-from config_manager import get_playlists_in_config_as_sorted_list, write_playlist_config
+from config_manager import get_playlists_in_config_as_sorted_list, write_playlist_config, get_device_config, write_device_config
 import configparser
 import logging
 
@@ -53,7 +53,7 @@ def display_config_menu(player, duration=30):
     someone accidentally opened the menu and is not sure what to do.'''
     initial_time = time.time()  
     current_item_index = 0  # current item in list that is selected
-    options = ["-- exit --", "manual", "playlists", "ip adress"]  #TODO: bluetooth connection menu?
+    options = ["-- exit --", "manual", "playlists", "ip adress", "bluetooth"] 
     
     # wait for button press until 'duration' has passed. If loop expires, then None is returned
     while time.time()-initial_time < duration:
@@ -79,6 +79,7 @@ def display_config_menu(player, duration=30):
             elif current_item_index == 1: show_manual_qr_code(player); return
             elif current_item_index == 2: select_playlists_on_display(player); return
             elif current_item_index == 3: display_ip_info(player); return
+            elif current_item_index == 4: toggle_bluetooth_skip_state(player); return
             # add more options here
         
         if player.sidebutton_2.got_pressed():
@@ -228,3 +229,36 @@ def select_playlists_on_display(player):
                 playlists[cursor_position][1] = not playlists[cursor_position][1]
         
         time.sleep(0.02)
+
+
+def toggle_bluetooth_skip_state(player):
+    '''Toggle the state of the bluetooth skip state and update in config. 
+    can be used for situations where you are developing for the system without a bluetooth device
+    nearby, or if you are using a usb-to-audio adapter card and a wired audio connection'''
+
+    logger = logging.getLogger()
+    logger.info("Toggling bluetooth state")
+
+    config = get_device_config()  # get whatever was configured before
+    new_bluetooth_state = not config.getboolean('connectivity', 'skip-bluetooth')
+    logger.info(f"Switching skip-bluetooth (player.ini) from {not new_bluetooth_state} to {new_bluetooth_state}")
+
+    player.display.add_text_to_overlay("Skip Bluetooth", (32, 5), fill=(0,139,139,255), clear=True)
+    player.display.add_text_to_overlay("set to: " + str(new_bluetooth_state), (32, 50), fill=(0,139,139,255), clear=False)
+    player.display.add_overlay_to_display(dimming=0.9)     
+
+    if new_bluetooth_state:
+        config['connectivity']['skip-bluetooth'] = "yes"
+    else:
+        config['connectivity']['skip-bluetooth'] = "no"
+
+    write_device_config(config)
+    logger.info(f"Wrote new skip-bluetooth (player.ini) value")
+
+    time.sleep(0.5)
+
+    # wait until ok button is pressed
+    while not player.playpause.got_pressed():
+        time.sleep(0.03)
+
+    return
