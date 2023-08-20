@@ -38,6 +38,8 @@ A [step-by-step walkthrough of assembly](docs/assembly.md) is available.
 
 > Feedback on what parts of the assembly are not explained well or are particularly complicated is greatly appreciated. Overly complicated steps could be fixed in future design revisions.
 
+If you find yourself in a situation where accessing the SpotiStation is often difficult and moving the player is not an option, you could consider sourcing the parts for and printing a wireless remote 🎮 for the system. Total parts cost (excluding printed parts) is only around 10 euros, so it is cheap to add. Check out the separate instructions for [the simple wireless remote](docs/assembly-optional-remote.md).
+
 ### 💻 Software Setup
 
 The software setup is streamlined as much as possible, but there are some unavoidable difficult steps due to the need to fetch API keys and such for Spotify. If you know how to SSH into your Raspberry Pi, you should be good to go.
