@@ -1,8 +1,12 @@
 # Software Setup 
 
-### 🚧 IN NEED OF REVIEW: this setup guide is currently purely functional, it needs to be rewritten for new users.
+> [!CAUTION]
+> The instructions in the section below can be a bit technical and should be streamlined. If you are planning on following them and get stuck, feel free to send an email and I will try to help out.
 
 We are assuming the code is run from a raspberry pi running `Raspberry Pi OS Lite 32-Bit` and that the raspberry pi has some way to connect to Wi-Fi. Bluetooth connectivity is required if speakers are to be driven wirelessly (as opposed to via 3.5mm jack of the Pi).
+
+> [!IMPORTANT]
+> We are assuming you will configure your installation of Raspberry Pi OS with username `musicpi` and device name `SpotiStation`. 
 
 Raspbian OS Lite comes with A Python 3 installation, and a GPIO library, so that will be pre-installed. But we will still need to get `pip` installed. 
 
@@ -108,8 +112,7 @@ and again we must create and edit this file in `nano` (use `nano ~/.config/spoti
 
 ```toml
 [global]
-username = "USER"
-password = "PASS"
+#username_cmd = "jq -r .username /home/musicpi/.cache/spotifyd/credentials.json"
 backend = "alsa"
 #device = alsa_audio_device # Given by `aplay -L`
 mixer = "PCM"
@@ -117,22 +120,20 @@ volume-controller = "alsa" # or alsa_linear, or softvol
 #onevent = command_run_on_playback_event
 device_name = "SpotiStation"
 bitrate = 320
-cache_path = "cache_directory"
+cache_path = "/home/musicpi/.cache/spotifyd"
 volume-normalisation = true
 normalisation-pregain = -10
 ```
 
-Where of course the following items have to be changed to your own credentials/requirements:
-
-* username
-* password
-* (optional) device - uncomment this line (remove `#`) and set a device if you want to select a specific output for audio (e.g. HDMI/Bluetooth)
+(optional): `device` uncomment this line (remove `#`) and set a device if you want to select a specific output for audio (e.g. HDMI/Bluetooth)
 
 > If you use Facebook login for Spotify, you will need to go to Spotify's website and look at your account settings. You should be able to find a numerical username. This is the username you will want to use for `spotifyd`. As for the password, you will probably have to request a 'device password' somewhere in the account settings in Spotify. This takes less than 3 minutes.
 
-If you have filled in your credentials, it would be good to check if its all working before making the daemon start up automatically. Give it a whirl by typing `~/spotifyd --no-daemon`. **You should get some information about the information it is using and if it managed to make a connection. If you go to Spotify on your phone or pc, the device should now be listed in playback devices (as 'SpotiStation')!**
+If you have created your config, it would be good to check if its all working before making the daemon start up automatically. Give it a whirl by typing `~/spotifyd --no-daemon`. **You should get some information about the information it is using and if it managed to make a connection. If you go to Spotify on your phone or pc, the device should now be listed in playback devices (as 'SpotiStation')!**
 
 ![spotify device playback menu showing spotistation listed](../media/spotify_playback_device_selection.JPG)
+
+If you managed to connect to the device as a spotify playback device and tried to play some music over it, a new file should have been created in `/home/musicpi/.cache/spotifyd` called `credentials.json`. If that file exists, you can uncomment the line with `username_cmd`. Next time the service is run, it will be listed as one of your speakers (rather than one that your account has never seen before).  
 
 If everything worked up to this point, it is time to set `spotifyd` to start when the raspberry pi is booted. That way we always have it running and ready to play! Let's make a service file for `systemctl` to run.
 
